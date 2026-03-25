@@ -1,0 +1,312 @@
+\documentclass[12pt]{article}
+
+% Packages
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{bm}
+\usepackage{bbm}
+\usepackage[style=numeric]{biblatex}
+\usepackage{caption}
+\usepackage{cancel}
+\usepackage{empheq}
+\usepackage{fancyhdr}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage[nameinlink]{cleveref}
+\usepackage{mathtools}
+\usepackage{pgfplots}
+\usepackage{physics}
+\usepackage{siunitx}
+\usepackage{tensor}
+\usepackage{tikz}
+\usepackage{upgreek}
+\usepackage{wasysym}
+
+\usetikzlibrary{calc,patterns,angles,quotes}
+\usetikzlibrary{decorations.markings}
+
+% PGFPlots
+\pgfplotsset{compat=newest} 
+
+% Variables
+\newcommand{\theAuthor}{Paul Virally}
+\newcommand{\theTitle}{Multivariate Gaussians}
+\newcommand{\theSubtitle}{}
+\newcommand{\theDate}{\today}
+
+% Headers and footers
+\pagestyle{fancy}
+\lhead{\theAuthor{}}
+\chead{\textit{\theSubtitle{}}}
+\rhead{\theTitle{}}
+\lfoot{}
+\cfoot{}
+\rfoot{Page \thepage}
+
+\newcommand\red[1]{
+    \ensuremath{\textcolor{red}{#1}}
+}
+
+\newcommand\blue[1]{
+    \ensuremath{\textcolor{blue}{#1}}
+}
+
+\newcommand\todo[1]{
+    \Huge{\color{red}{TODO:~#1}}\normalsize{}
+}
+
+\newcommand{\kbar}{\mathchar'26\mkern-9mu k}
+
+\renewcommand\qedsymbol{\(\blacksquare\)}
+\newtheorem{theorem}{Theorem}
+\numberwithin{theorem}{section}
+\numberwithin{equation}{section}
+\numberwithin{figure}{section}
+
+\newcommand*\circled[1]{\tikz[baseline=(char.base)]{\node[shape=circle,draw,inner sep=2pt] (char) {#1};}}
+
+% \addbibresource{bib.bib}
+
+% Document
+\begin{document}
+
+% Cover page
+% \begin{titlepage}
+%   \begin{center}
+%       \textsc{\Huge{\theTitle}}\\[0.5cm]
+%       \textsc{\Large{\theSubtitle}}\\[4cm]
+%       \theAuthor{}\\[0.2cm]
+%       \theDate{}
+%   \end{center}
+% \newpage
+% \end{titlepage}
+% \newpage
+
+\tableofcontents
+\newpage
+
+\section{Easy Multivariate Gaussians}
+
+The general multivariate Gaussian probability density function, \(f : \mathbb{R}^{d} \to \mathbb{R}\) is given by:
+\begin{align*}
+    f\qty(\ket{x}) &= \frac{1}{\sqrt{\qty(2\pi)^{d}\abs{\bm{\Sigma}}}} \exp(-\frac{1}{2}\qty(\bra{x} - \bra{\mu})\bm{\Sigma}^{-1}\qty(\ket{x} - \ket{\mu}))\stepcounter{equation}\tag{\theequation}\label{eq:pdf}
+\end{align*}
+where \(\ket{\mu}\in \mathbb{R}^{d}\) is the mean vector and \(\bm{\Sigma}\succ \bm{0}\) is the covariance matrix. In our case, \(\bm{\Sigma}\) takes on a very particular form:
+\begin{align*}
+    \bm{\Sigma}\qty(r) &= \qty(1 - r)\bm{\mathbbm{1}} + r \op{1} \\
+                       &= \begin{bmatrix}
+                            1 & r & \cdots & r \\
+                            r & 1 & \cdots & r \\
+                            \vdots & \vdots & \ddots & \vdots \\
+                            r & r & \cdots & 1
+                        \end{bmatrix}
+\end{align*}
+where \(\ket{1}\) is a vector of all ones. This simple structure gives us a lot. First, notice that \(\ket{1}\) is an eigenvector of \(\bm{\Sigma}\):
+\begin{align*}
+    \bm{\Sigma}\ket{1} &= \qty(1 - r)\bm{\mathbbm{1}}\ket{1} + r\ket{1}\underbrace{\bra{1}\ket{1}}_{d} \\
+                       &= (1 + r\qty(d-1))\ket{1}
+\end{align*}
+Now consider any vector \(\ket{x}\in \mathbb{R}^{d}\) orthogonal to \(\ket{1}\),
+i.e. such that \(\bra{1}\ket{x} = 0\). Then:
+\begin{align*}
+    \bm{\Sigma}\ket{x} &= \qty(1 - r)\bm{\mathbbm{1}}\ket{x} + \ket{1}\underbrace{\bra{1}\ket{x}}_{0} \\
+                       &= (1 - r)\ket{x}
+\end{align*}
+The span of vectors orthogonal to \(\ket{1}\) is of dimension \(d - 1\). Thus, the eigenvalues of \(\bm{\Sigma}\) are \(1+r\qty(d-1)\) with multiplicity 1 and \(1 - r\) with multiplicity \(d - 1\). The determinant of \(\bm{\Sigma}\) is then:
+\begin{align*}
+    \abs{\bm{\Sigma}} &= (1 + r\qty(d-1))(1 - r)^{d - 1} \stepcounter{equation}\tag{\theequation}\label{eq:det}
+\end{align*}
+For \(\bm{\Sigma}\) to be positive definite, we require that both eigenvalues are positive, which gives us the range:
+\begin{align*}
+    -\frac{1}{d - 1} < r < 1\stepcounter{equation}\tag{\theequation}\label{eq:range}
+\end{align*}
+From the Sherman-Morrison formula, we can also compute the inverse of \(\bm{\Sigma}\):
+\begin{align*}
+    \bm{\Sigma}^{-1} &= \qty(1-r)^{-1}\bm{\mathbbm{1}} - \frac{\qty(1-r)^{-1}r\op{1}\qty(1-r)^{-1}}{1 + \bra{1}\qty(1-r)^{-1}r\ket{1}} \\
+                     &= \qty(1-r)^{-1}\bm{\mathbbm{1}} - \frac{r\qty(1-r)^{-2}}{1 + rd\qty(1-r)^{-1}}\op{1}\\
+                     &= \qty(1-r)^{-1}\qty[\bm{\mathbbm{1}} - \frac{r}{1 + r\qty(d - 1)}\op{1}]\stepcounter{equation}\tag{\theequation}\label{eq:inv}
+\end{align*}
+Let \(\ket{\tilde{x}} = \ket{x} - \ket{\mu}\), then the quadratic form in the exponent of~\cref{eq:pdf} can be written as:
+\begin{align*}
+    \bra{\tilde{x}}\bm{\Sigma}^{-1}\ket{\tilde{x}} &= \qty(1-r)^{-1}\qty[\bra{\tilde{x}}\ket{\tilde{x}} - \frac{r}{1 + r\qty(d - 1)}\bra{\tilde{x}}\ket{1}\bra{1}\ket{\tilde{x}}] \\
+                                                           &= \qty(1-r)^{-1}\qty[\bra{\tilde{x}}\ket{\tilde{x}} - \frac{r}{1 + r\qty(d - 1)}\qty(\sum_{i=1}^{d}\tilde{x}_i)^2]\stepcounter{equation}\tag{\theequation}\label{eq:quad}
+\end{align*}
+The multivariate Gaussian distribution is then:
+\begin{align*}
+    f\qty(\ket{x}) &= \frac{1}{\sqrt{2\pi(1 + r\qty(d-1))(1 - r)^{d - 1}}} \exp\qty(-\frac{1}{2(1-r)}\qty[\norm{\ket{x} - \ket{\mu}}_2^2 - \frac{r}{1 + r\qty(d - 1)}\qty(\sum_{i=1}^{d}\qty(x_i - \mu_i))^2])\stepcounter{equation}\tag{\theequation}\label{eq:pdf-simple}
+\end{align*}
+
+\section{Tensors and the Tucker HOSVD}
+
+Let \(H_i\) be a Hilbert space of dimension \(d_i\). An \(n\)-way tensor
+\(\mathbb{T}\) is an element of the tensor product \(H = H_1 \otimes H_2 \otimes
+\cdots \otimes H_N\) with coordinates \(T_{i_1, i_2,\ldots, i_N}\) in some bases
+of the \(H_i\). The tensor itself acts on elements of the dual spaces
+\(H_i^{*}\) (linear functionals, or bras) as follows:
+\begin{align*}
+    \mathbb{T}\qty(\bra*{v_1}, \bra*{v_2}, \ldots, \bra*{v_N}) &= \sum_{i_1, \ldots, i_N} T_{i_1, i_2,\ldots, i_N} \bra*{v_1}\ket*{i_1} \bra*{v_2}\ket*{i_2} \cdots \bra*{v_N}\ket*{i_N}
+\end{align*}
+where \(\ket*{i_k}\) is the \(i_k\)-th basis vector of \(H_k\).
+
+For tensors, apparently there is no unique analogue of the SVD for matrices. In
+an SVD, you get the optimal rank-\(r\) approximation of a matrix by keeping the
+\(r\) largest singular values while simultaneously getting orthonormal bases for
+the row and column spaces. For tensors, you can get the optimal rank-\(r\)
+approximation by keeping the \(r\) largest singular values, but you don't get
+orthonormal bases for the spaces on which the tensor acts. You can also get
+orthonormal bases, but then you don't get the optimal rank-\(r\) approximation.
+The Tucker Higher-order singular value decomposition (HOSVD) is the latter: a
+decomposition of a tensor that focuses on getting orthonormal bases for the
+spaces on which the tensor acts, but there is no guarantee that you get the
+optimal rank-\(r\) approximation.
+
+The HOSVD relies on ``matricization'' (mode unfolding, or \texttt{reshape}) of
+the tensor. Define \(\mathbb{T}_{\qty(k)} : H_k \to \bigotimes_{j\neq k} H_j\)
+as the mode-\(k\) unfolding of \(\mathbb{T}\). In some basis, this is just a
+\texttt{reshape} of the coordinates of \(\mathbb{T}\) (\(T_{i_1, \ldots, i_N}\))
+into a matrix \(T_{(k)} \in \mathbb{C}^{d_k \times \prod_{j\neq k} d_j}\).
+
+To form the HOSVD, one computes the SVD of each mode unfolding \(T_{(k)}\):
+\begin{align*}
+    T_{(k)} &= U_k \Sigma_k V_k^\dagger
+\end{align*}
+where, as usual, \(U_k\) and \(V_k\) are unitary and \(\Sigma_k\) is diagonal
+with non-negative entries. From here, the core tensor \(\mathbb{S}\) is defined
+as:
+\begin{align*}
+    \mathbb{S} &= \mathbb{T} \times_1 V_1^\dagger \times_2 V_2^\dagger \times_3 \cdots \times_N V_N^\dagger
+\end{align*}
+where \(\times_k\) is the mode-\(k\) product of a tensor by a matrix. The HOSVD
+of \(\mathbb{T}\) is then given by:
+\begin{align*}
+    \mathbb{T} &= \mathbb{S} \times_1 V_1 \times_2 V_2 \times_3 \cdots \times_N V_N
+\end{align*}
+
+\section{HOSVD of Multivariate Gaussians}
+We found the multivariate Gaussian distribution \(f\qty(\ket{x})\)
+in~\cref{eq:pdf-simple}. We can think of this function as the coordinates of a
+tensor \(\mathbb{F}\):
+\begin{align*}
+    \mathbb{F}\qty(\bra{g}) &= \int_{\mathbb{R}^d} f\qty(\ket{x}) g_1\qty(x_1) \cdots g_n\qty(x_n) \dd[n]{\ket{x}}
+\end{align*}
+Note that the Hilbert spaces in question here are \(H_i = L^2\qty(\mathbb{R})\)
+for \(i = 1, \ldots, n\).
+
+Let's compute the mode-\(k\) unfolding of this tensor, \(F_{\qty(k)} : H_k \to
+\bigotimes_{j \neq k}H_j\). Let \(\ket{x} = \qty(x_k, \ket{x_{\kbar}})\) where
+\(\ket{x_{\kbar}}\) is the vector of all coordinates except \(x_k\). In a basis,
+this looks like:
+\begin{align*}
+    \qty(F_{\qty(k)}g)\qty(\ket{x_{\kbar}}) &= \int_{\mathbb{R}} f\qty(x_k, \ket{x_{\kbar}}) g\qty(x_k) \dd{x_k}
+\end{align*}
+In the HOSVD, all we really need are the right singular vectors and singular
+values of \(F_{\qty(k)}\). The right singular vectors of \(F_{\qty(k)}\) are the
+eigenvectors of \(F_{\qty(k)}^\dagger F_{\qty(k)}\) and the singular values are
+the square roots of the corresponding eigenvalues. Let's compute
+\(F_{\qty(k)}^\dagger F_{\qty(k)}\):
+\begin{align*}
+    \qty(C_kg)\qty(t) &= \qty(F_{\qty(k)}^\dagger\qty(F_{k}g))\qty(t) \\
+                      &= \int_{\mathbb{R}^{d-1}} f\qty(t, \ket{x_{\kbar}}) \qty(F_{\qty(k)}g)\qty(\ket{x_{\kbar}}) \dd[n-1]{\ket{x_{\kbar}}} \\
+                      &= \int_{\mathbb{R}^{d-1}} f\qty(t, \ket{x_{\kbar}}) \qty(\int_{\mathbb{R}} f\qty(s, \ket{x_{\kbar}})g\qty(s)\dd{s}) \dd{x_k}) \dd[n-1]{\ket{x_{\kbar}}} \\
+                      &= \int_{\mathbb{R}} \underbrace{\qty(\int_{\mathbb{R}^{d-1}} f\qty(t, \ket{x_{\kbar}})f\qty(s, \ket{x_{\kbar}}))}_{\kappa_{\kbar}\qty(t, s)} g\qty(s) \dd{s}
+\end{align*}
+where \(\kappa_{\kbar}\qty(t, s)\) is the kernel of the integral operator
+\(C_k\). The right singular vectors of \(F_{\qty(k)}\) are the functions
+\(v_{k}^{\qty(n)}\) such that \(\displaystyle\qty(C_kv_k^{\qty(n)})\qty(s) =
+\int_{\mathbb{R}} \kappa_{\kbar}\qty(t, s) v_k^{\qty(n)}\qty(t) \dd{t} =
+\lambda_k^{\qty(n)}v_k^{\qty(n)}\) and the singular values are
+\(\sigma_k^{\qty(n)} = \sqrt{\lambda_k^{\qty(n)}}\).
+
+Let's compute the kernel \(\kappa_{\kbar}\qty(t, s)\):
+\begin{align*}
+    \kappa_{\kbar}\qty(t, s) &= \int_{\mathbb{R}^{d-1}} f\qty(t, \ket{x_{\kbar}})f\qty(s, \ket{x_{\kbar}}) \dd[n-1]{\ket{x_{\kbar}}}
+\end{align*}
+First, let's define some variables to make the expression for \(f\) more
+compact:
+\begin{align*}
+    \text{Let }\mathcal{N} &= \qty(\qty(2\pi)^{d}\qty(1 + r\qty(d - 1))\qty(1-r)^{d-1})^{-1 / 2} \\
+    \text{Let } a &= \frac{1}{1-r} \\
+    \text{Let } b &= \frac{r}{1 + r\qty(d-1)} \\
+    \text{Let } \ket{\tilde{x}_{\kbar}} &= \ket{x_{\kbar}} - \ket{\mu} \\
+    \text{Let } \tilde{\varsigma} &= \sum_{i=1}^{d}\ket{\tilde{x}_{\kbar}}_i \\
+    \text{Let } \tilde{n} &= \norm{\ket{\tilde{x}_{\kbar}}}_2 \\
+    \implies f(u, \ket{x_{\kbar}}) &= \mathcal{N} \exp\qty(-\frac{a}{2}\qty[\tilde{n}^2 + (u - \mu_k)^2 - b\qty(\tilde{\varsigma} + \qty(u - \mu_k))^2]) \\
+    \implies f\qty(t, \ket{x_{\kbar}})f\qty(s, \ket{x_{\kbar}}) &= \mathcal{N}^2 \exp\bigg(\!\!-\frac{a}{2}\bigg[\tilde{n}^2 + (t - \mu_k)^2 - b\qty(\tilde{\varsigma} + \qty(t - \mu_k))^2 + \\
+                             &\qquad + \tilde{n}^2 + (s - \mu_k)^2 - b\qty(\tilde{\varsigma} + \qty(s - \mu_k))^2\,\bigg]\bigg) \\
+                             &= \mathcal{N}^2 \exp\qty(-\frac{a\qty(1 - b)}{2}\qty[\qty(t - \mu_k)^2 + \qty(s - \mu_k)^2]) \times \\
+                             &\quad\times \exp(-a\qty[\tilde{n}^2 - b \tilde{\varsigma}^2 - 2\tilde{\varsigma}\qty(t + s - 2\mu_k)])
+\end{align*}
+The kernel is then:
+\begin{align*}
+    \kappa_{\kbar}\qty(t, s) &= \int_{\mathbb{R}^{d-1}} f\qty(t, \ket{x_{\kbar}})f\qty(s, \ket{x_{\kbar}}) \dd[n-1]{\ket{x_{\kbar}}} \\
+                             &= \frac{\exp(-\frac{1 + r\qty(d - 2)}{2\qty(1-r)\qty[1 + r\qty(d-1)]}\qty[\qty(t - \mu_k)^2 + \qty(s - \mu_k)^2])}{\qty(2\pi)^{d}\qty(1 + r\qty(d-1))\qty(1-r)^{d-1}} \times \\
+                             &\quad \times \underbrace{\int_{\mathbb{R}^{d-1}} \exp\qty(-a\qty[\tilde{n}^2 - b \tilde{\varsigma}^2 - 2\tilde{\varsigma}\qty(t + s - 2\mu_k)]) \dd[n-1]{\ket{x_{\kbar}}}}_{I}
+\end{align*}
+Focusing on \(I\), we can split the vector \(\ket{x_{\kbar}}\) into its
+projection onto \(\ket{1}\) and its projection onto the subspace orthogonal to
+\(\ket{1}\): \(\displaystyle \ket{x_{\kbar}} = \frac{\alpha}{\sqrt{\bra{1}\ket{1}}}
+\ket{1} + \ket{\perp}\). This simplifies a
+few of the quantities in \(I\):
+\begin{align*}
+    \tilde{n}^2 &= \bra{x_{\kbar}}\ket{x_{\kbar}} \\
+                &= \frac{\alpha^2}{\bra{1}\ket{1}} \bra{1}\ket{1} + \bra{\perp}\ket{\perp} \\
+                &= \alpha^2 + \bra{\perp}\ket{\perp} \\
+    \tilde{\varsigma} &= \bra{1}\ket{x_{\kbar}} \\
+                      &= \frac{\alpha}{\sqrt{\bra{1}\ket{1}}} \bra{1}\ket{1} + \bra{1}\ket{\perp} \\
+                      &= \alpha\sqrt{\bra{1}\ket{1}} \\
+                      &= \alpha\sqrt{d-1}
+\end{align*}
+The integral then becomes:
+\begin{align*}
+    I &= \int_{\mathbb{R}}\int_{\mathbb{R}^{d-2}} \exp\qty(-a\qty[\alpha^2 + \bra{\perp}\ket{\perp} - b\alpha^2\qty(d-1) - 2\alpha\sqrt{d-1}\qty(t + s - 2\mu_k)]) \dd{\alpha}\dd[n-2]{\ket{\perp}} \\
+        &= \int_{\mathbb{R}} \exp\qty(-a\qty[\alpha^2 - b\alpha^2\qty(d-1) - 2\alpha\sqrt{d-1}\qty(t + s - 2\mu_k)]) \dd{\alpha} \times \\
+        &\quad \times \int_{\mathbb{R}^{d-2}} \exp(-a\bra{\perp}\ket{\perp}) \dd[n-2]{\ket{\perp}} \\
+        &= \qty(\frac{\pi}{a})^{\frac{d-2}{2}} \exp(\frac{a\qty(d-1)\qty(t + s - 2\mu_k)^2}{\qty(1 - b\qty(d-1))})\int_{\mathbb{R}} \exp(-a\qty(\alpha - \frac{2a\sqrt{d-1}}{2a\qty(1 - b\qty(d-1))})^2) \dd{\alpha} \\
+        &= \qty(\frac{\pi}{a})^{\frac{d-1}{2}} \exp(\frac{a\qty(d-1)\qty(t + s - 2\mu_k)^2}{\qty(1 - b\qty(d-1))}) \\
+        &= \qty(\pi\qty(1-r))^{\frac{d-1}{2}} \exp(\frac{\qty(1 + r\qty(d-1))\qty(d-1)\qty(t + s - 2\mu_k)^2}{1-r})
+\end{align*}
+Putting everything together, we get:
+\begin{align*}
+    \kappa_{\kbar}\qty(t, s) &= \frac{\exp(-\frac{1 + r\qty(d - 2)}{2\qty(1-r)\qty[1 + r\qty(d-1)]}\qty[\qty(t - \mu_k)^2 + \qty(s - \mu_k)^2])}{\qty(2\pi)^{d}\qty(1 + r\qty(d-1))\qty(1-r)^{d-1}} \times \\
+                             &\quad \times \qty(\pi\qty(1-r))^{\frac{d-1}{2}} \exp(\frac{\qty(1 + r\qty(d-1))\qty(d-1)\qty(t + s - 2\mu_k)^2}{1-r}) \\
+                             &= \frac{\qty(1-r)^{\frac{1-d}{2}}}{2^{d} \pi^{\frac{1+d}{2}}\qty(1 + r\qty(d-1))} \exp(-\frac{\qty(1 + r\qty(d - 2))\qty[\qty(t - \mu_k)^2 + \qty(s - \mu_k)^2]}{2\qty(1-r)\qty(1 + r\qty(d-1))}) \times \\
+                             &\quad \times \exp(\frac{\qty(1 + r\qty(d-1))\qty(d-1)\qty(t + s - 2\mu_k)^2}{1-r})
+\end{align*}
+We can write this simply as:
+\begin{align*}
+    \kappa_{\kbar}\qty(t, s) &= \mathcal{C} \exp\qty(-u\qty(t^2 + s^2) + vts)
+\end{align*}
+for some real constants \(\mathcal{C}\), \(u\) and \(v\). The eigenfunctions of
+an integral operator with a kernel of this form are known to be\footnote{This is
+obviously a fact known to everyone, and not something a machine that does a
+bunch of matrix vector products that is very good at text prediction wrote.} the
+Hermite functions. The idea will be to use the Hermite polynomial's
+orthogonality,~\cref{eq:ortho}, and Mehler's formula~\cref{eq:mehler}
+(\href{https://en.wikipedia.org/wiki/Mehler_kernel?oldformat=true#Physics_version}{found
+on wikipedia}) to recover an eigenvalue equation.
+\begin{align*}
+    \int_{-\infty}^{\infty} H_n\qty(x)H_m\qty(x) e^{-x^2} \dd{x} &= 2^n n! \sqrt{\pi} \delta_{nm}\stepcounter{equation}\tag{\theequation}\label{eq:ortho} \\
+    \frac{1}{\sqrt{1 - \rho^2}}\exp(\frac{-\qty(1 + \rho^2)\qty(x^2 + y^2) + 4xy\rho}{2\qty(1 - \rho^2)}) &= \sum_{n=0}^{\infty} \qty(\frac{\rho}{2})^n \frac{H_n\qty(x)H_n\qty(y)}{n!} \exp(-\frac{x^2 + y^2}{2})\stepcounter{equation}\tag{\theequation}\label{eq:mehler}
+\end{align*}
+
+\todo{just use hermite functions and you're good}
+
+Recall that we are after the eigenfunctions \(v_k^{\qty(n)}\qty(s)\) (the right
+eigenvectors of \(F_{\qty(k)}\)) corresponding eigenvalues
+\(\lambda_k^{\qty(n)}\)) such that \(\displaystyle\qty(C_kv_k^{\qty(n)})\qty(s)
+= \int_{\mathbb{R}} \kappa_{\kbar}\qty(t, s) v_k^{\qty(n)}\qty(t) \dd{t} =
+\lambda_k^{\qty(n)}v_k^{\qty(n)}\). Starting from~\cref{eq:mehler} and working
+towards~\cref{eq:ortho}, we can get:
+\begin{align*}
+    \int_{\mathbb{R}} \frac{1}{\sqrt{1 - \rho^2}} \exp(\frac{-\qty(\frac{3}{2} + \rho^2)\qty(x^2 + y^2) + 4xy\rho}{2\qty(1 - \rho^2)}) H_n\qty(x) \dd{x} &= \sum_{n=0}^{\infty} \qty(\frac{\rho}{2})^n \frac{H_n\qty(y)e^{-y^2}}{n!} \int_{\mathbb{R}}  H_n\qty(x)H_n\qty(x) e^{-x^2} \dd{x} \\
+                                                                                                                                                         &= \sum_{n=0}^{\infty} \qty(\frac{\rho}{2})^n H_n\qty(y) e^{-y^2}
+\end{align*}
+% If we can identify the kernel \(\kappa_{\kbar}\qty(t, s)\) with the kernel in
+% the left-hand side of the above equation, then we can read off the
+% eigenfunctions and eigenvalues of \(C_k\) from the right-hand side. We can do
+% this by setting \(\rho = 2\sqrt{uv}/(u + v)\) and rescaling \(t\) and \(s\) by
+% \(\sqrt{(u + v)/2}\). This gives us:
+
+\end{document}

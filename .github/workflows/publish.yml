@@ -1,0 +1,51 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - "v*.*.*"  # e.g. v0.1.0, v1.2.3
+
+jobs:
+  publish:
+    name: Build & Publish to PyPI
+    runs-on: ubuntu-latest
+    # Required for OIDC trusted publishing (no long-lived token needed)
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          allow-prereleases: true
+
+      - name: Install dev dependencies
+        run: uv sync --group dev
+
+      - name: Run tests before publishing
+        run: uv run pytest tests/ -m "not jax and not cupy" --tb=short
+
+      - name: Build wheel and sdist
+        run: uv build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        # Uses OIDC trusted publishing — no PYPI_TOKEN secret required.
+        # One-time setup: go to pypi.org → Your project → Publishing →
+        # "Add a new trusted publisher" → GitHub, this repo, workflow "publish.yml".
+        #
+        # If you haven't configured trusted publishing yet, comment out the
+        # block above and use this instead:
+        #
+        # env:
+        #   UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        # run: uv publish
