@@ -59,8 +59,9 @@ Switch to a JAX or CuPy backend by passing `backend="jax"` or `backend="cupy"`.
 
 ## Documentation
 
-Full documentation — including installation, user guide, theory, and API reference — is
-available at **[tensorrsvd.readthedocs.io](https://tensorrsvd.readthedocs.io)**.
+Full documentation (installation, user guide, theory, and API reference, etc.)
+is available at
+**[tensorrsvd.readthedocs.io](https://tensorrsvd.readthedocs.io)**.
 
 ## References
 
