@@ -1,0 +1,181 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installation &mdash; TensorRSVD 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="User Guide" href="user_guide.html" />
+    <link rel="prev" title="TensorRSVD" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            TensorRSVD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#from-pypi">From PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#optional-backends">Optional backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#verifying-the-installation">Verifying the installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Mathematical Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">Public API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.html">Core Internals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backends.html">Backends</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TensorRSVD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Installation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Python</strong> ≥ 3.14</p></li>
+<li><p><strong>NumPy</strong> ≥ 2.4</p></li>
+<li><p><strong>pylops</strong> ≥ 2.6</p></li>
+</ul>
+<p>These are installed automatically when you install TensorRSVD from PyPI.</p>
+</section>
+<section id="from-pypi">
+<h2>From PyPI<a class="headerlink" href="#from-pypi" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>tensorrsvd
+</pre></div>
+</div>
+</section>
+<section id="optional-backends">
+<h2>Optional backends<a class="headerlink" href="#optional-backends" title="Link to this heading"></a></h2>
+<p>TensorRSVD ships with optional support for two accelerated backends.</p>
+<p><strong>JAX</strong> (CPU / GPU / TPU)</p>
+<p>JAX enables JIT-compiled matrix–vector products inside
+<code class="xref py py-class docutils literal notranslate"><span class="pre">MatricizedTensorOperator</span></code> and is required for the
+<code class="docutils literal notranslate"><span class="pre">backend=&quot;jax&quot;</span></code> option.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;tensorrsvd[jax]&quot;</span>
+</pre></div>
+</div>
+<p>For CUDA 12 or CUDA 13 support:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;tensorrsvd[jaxcuda12]&quot;</span><span class="w">   </span><span class="c1"># CUDA 12</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;tensorrsvd[jaxcuda13]&quot;</span><span class="w">   </span><span class="c1"># CUDA 13</span>
+</pre></div>
+</div>
+<p>See the <a class="reference external" href="https://jax.readthedocs.io/en/latest/installation.html">JAX installation guide</a>
+for additional platform-specific instructions.</p>
+<p><strong>CuPy</strong> (NVIDIA GPU only)</p>
+<p>CuPy offloads all linear-algebra primitives to a CUDA device and is required
+for the <code class="docutils literal notranslate"><span class="pre">backend=&quot;cupy&quot;</span></code> option. Install it following the
+<a class="reference external" href="https://docs.cupy.dev/en/stable/install.html">CuPy installation guide</a>,
+choosing the wheel that matches your CUDA version.</p>
+</section>
+<section id="verifying-the-installation">
+<h2>Verifying the installation<a class="headerlink" href="#verifying-the-installation" title="Link to this heading"></a></h2>
+<p>Run a quick smoke test from a Python shell:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tensorrsvd</span><span class="w"> </span><span class="kn">import</span> <span class="n">ho_svd_r</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">my_tensor</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x0</span> <span class="o">-</span> <span class="n">x1</span> <span class="o">+</span> <span class="n">x2</span>
+
+<span class="n">U_list</span><span class="p">,</span> <span class="n">S_list</span> <span class="o">=</span> <span class="n">ho_svd_r</span><span class="p">(</span>
+    <span class="n">tensor</span><span class="o">=</span><span class="n">my_tensor</span><span class="p">,</span>
+    <span class="n">tensor_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+    <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+    <span class="n">rank</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">num_oversamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">num_idxs</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">([</span><span class="n">U</span><span class="o">.</span><span class="n">shape</span> <span class="k">for</span> <span class="n">U</span> <span class="ow">in</span> <span class="n">U_list</span><span class="p">])</span>  <span class="c1"># [(16, 3), (16, 3), (16, 3)]</span>
+</pre></div>
+</div>
+<p>If no exception is raised and the shapes look right, the installation is
+working correctly.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="TensorRSVD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="user_guide.html" class="btn btn-neutral float-right" title="User Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Paul Virally.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

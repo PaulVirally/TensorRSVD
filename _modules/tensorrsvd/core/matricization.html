@@ -1,0 +1,316 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tensorrsvd.core.matricization &mdash; TensorRSVD 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            TensorRSVD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../theory.html">Mathematical Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api_reference.html">Public API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../core.html">Core Internals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../backends.html">Backends</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">TensorRSVD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tensorrsvd.core.matricization</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tensorrsvd.core.matricization</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pylops</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pylops.utils.backend</span><span class="w"> </span><span class="kn">import</span> <span class="n">deps</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">..backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_arange</span><span class="p">,</span> <span class="n">get_conj</span><span class="p">,</span> <span class="n">get_meshgrid</span><span class="p">,</span> <span class="n">get_ravel</span><span class="p">,</span> <span class="n">get_zeros</span>
+
+<span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_unit_lerp</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Map integer indices in {0, ..., n-1} to the interval [0, 1].</span>
+
+<span class="sd">    For n == 1, returns 0 (single grid point at the origin). Works on both</span>
+<span class="sd">    scalars and arrays. Equivalent to np.linspace(0, 1, n)[idx] but without</span>
+<span class="sd">    materializing the full array.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">idx</span> <span class="o">*</span> <span class="mi">0</span>  <span class="c1"># preserves dtype and backend array type</span>
+    <span class="k">return</span> <span class="n">idx</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_insert_mode_coord</span><span class="p">(</span><span class="n">other_coords</span><span class="p">,</span> <span class="n">mode_val</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">num_idxs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the full coordinate list by inserting mode_val at position mode.&quot;&quot;&quot;</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_idxs</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_idxs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">d</span> <span class="o">==</span> <span class="n">mode</span><span class="p">:</span>
+            <span class="n">coords</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="n">mode_val</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">coords</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="n">other_coords</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">coords</span>
+
+
+<div class="viewcode-block" id="MatricizedTensorOperator">
+<a class="viewcode-back" href="../../../core.html#tensorrsvd.core.matricization.MatricizedTensorOperator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MatricizedTensorOperator</span><span class="p">(</span><span class="n">pylops</span><span class="o">.</span><span class="n">LinearOperator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Linear operator for the mode-m unfolding of a tensor defined by a callable.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tensor_callable : Callable</span>
+<span class="sd">        Vectorized callable accepting k array arguments (coordinates in [0, 1])</span>
+<span class="sd">        and returning the tensor values at those coordinates. Must be</span>
+<span class="sd">        JAX-traceable if backend == &#39;jax&#39;.</span>
+<span class="sd">    tensor_shape : tuple[int, ...]</span>
+<span class="sd">        Shape of the tensor (n_0, n_1, ..., n_{k-1}).</span>
+<span class="sd">    mode : int</span>
+<span class="sd">        Mode along which to unfold.</span>
+<span class="sd">    dtype : npt.DTypeLike</span>
+<span class="sd">        Data type of the operator.</span>
+<span class="sd">    backend : str</span>
+<span class="sd">        Array backend: &#39;numpy&#39;, &#39;cupy&#39;, or &#39;jax&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="MatricizedTensorOperator.__init__">
+<a class="viewcode-back" href="../../../core.html#tensorrsvd.core.matricization.MatricizedTensorOperator.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tensor_callable</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">tensor_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">mode</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">DTypeLike</span><span class="p">,</span>
+        <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">num_idxs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tensor_shape</span><span class="p">)</span>
+        <span class="n">num_rows</span> <span class="o">=</span> <span class="n">tensor_shape</span><span class="p">[</span><span class="n">mode</span><span class="p">]</span>
+        <span class="n">other_dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_idxs</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">mode</span><span class="p">]</span>
+        <span class="n">num_cols</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">tensor_shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">other_dims</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_callable</span> <span class="o">=</span> <span class="n">tensor_callable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tensor_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">tensor_shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_idxs</span> <span class="o">=</span> <span class="n">num_idxs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_rows</span> <span class="o">=</span> <span class="n">num_rows</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_other_dims</span> <span class="o">=</span> <span class="n">other_dims</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span> <span class="o">=</span> <span class="n">backend</span>
+
+        <span class="n">arange</span> <span class="o">=</span> <span class="n">get_arange</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+        <span class="n">meshgrid</span> <span class="o">=</span> <span class="n">get_meshgrid</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+        <span class="n">ravel</span> <span class="o">=</span> <span class="n">get_ravel</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+
+        <span class="n">other_1d</span> <span class="o">=</span> <span class="p">[</span>  <span class="c1"># precompute the 1D coordinate arrays for the non-mode dimensions</span>
+            <span class="n">_unit_lerp</span><span class="p">(</span><span class="n">arange</span><span class="p">(</span><span class="n">tensor_shape</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">),</span> <span class="n">tensor_shape</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">other_dims</span>
+        <span class="p">]</span>
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="n">other_1d</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">&quot;ij&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_other_coords</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ravel</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mesh</span><span class="p">)</span>
+        <span class="k">del</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">other_1d</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mode_vals</span> <span class="o">=</span> <span class="n">_unit_lerp</span><span class="p">(</span><span class="n">arange</span><span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">),</span> <span class="n">num_rows</span><span class="p">)</span>
+
+        <span class="c1"># build jitted JAX kernels once to avoid retracing</span>
+        <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;jax&quot;</span> <span class="ow">and</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_jax_matmat_fn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_jax_matmat</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_jax_rmatmat_fn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_jax_rmatmat</span><span class="p">()</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">))</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_eval_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i_m</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate all tensor entries with mode index fixed to i_m.&quot;&quot;&quot;</span>
+        <span class="n">mode_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mode_vals</span><span class="p">[</span><span class="n">i_m</span><span class="p">]</span>
+        <span class="n">coords</span> <span class="o">=</span> <span class="n">_insert_mode_coord</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_other_coords</span><span class="p">,</span> <span class="n">mode_val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mode</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_idxs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callable</span><span class="p">(</span><span class="o">*</span><span class="n">coords</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span> <span class="o">==</span> <span class="s2">&quot;jax&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jax_matmat_fn</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="n">zeros</span> <span class="o">=</span> <span class="n">get_zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_rows</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_rows</span><span class="p">):</span>
+            <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_row</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">@</span> <span class="n">x</span>
+        <span class="k">return</span> <span class="n">y</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span> <span class="o">==</span> <span class="s2">&quot;jax&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jax_rmatmat_fn</span><span class="p">(</span><span class="n">y</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="n">conj</span> <span class="o">=</span> <span class="n">get_conj</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">get_zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_rows</span><span class="p">):</span>
+            <span class="n">z</span> <span class="o">+=</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">conj</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eval_row</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">z</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matmat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute A @ X where X is (num_cols, l).&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span> <span class="o">==</span> <span class="s2">&quot;jax&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jax_matmat_fn</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">X_cols</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">get_zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">)((</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_rows</span><span class="p">,</span> <span class="n">X_cols</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_rows</span><span class="p">):</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_row</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">row</span> <span class="o">@</span> <span class="n">X</span>
+        <span class="k">return</span> <span class="n">Y</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rmatmat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute A^H @ Y where Y is (num_rows, l).</span>
+
+<span class="sd">        Uses a column-wise rank-1 accumulation to avoid allocating an</span>
+<span class="sd">        O(num_cols * l) broadcast temporary per row. Peak working memory</span>
+<span class="sd">        beyond the output buffer is O(num_cols) for a single conjugated row.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span> <span class="o">==</span> <span class="s2">&quot;jax&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jax_rmatmat_fn</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+        <span class="n">conj</span> <span class="o">=</span> <span class="n">get_conj</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">)</span>
+        <span class="n">Y_cols</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">num_cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="n">get_zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">)((</span><span class="n">num_cols</span><span class="p">,</span> <span class="n">Y_cols</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_rows</span><span class="p">):</span>
+            <span class="n">crow</span> <span class="o">=</span> <span class="n">conj</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eval_row</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Y_cols</span><span class="p">):</span>
+                <span class="n">Z</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">crow</span>
+        <span class="k">return</span> <span class="n">Z</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_jax_matmat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a jitted function computing A @ X via lax.fori_loop.&quot;&quot;&quot;</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callable</span>
+        <span class="n">other_coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_other_coords</span>
+        <span class="n">mode_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mode_vals</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mode</span>
+        <span class="n">num_idxs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_idxs</span>
+        <span class="n">num_rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_rows</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span>
+
+        <span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">matmat</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+            <span class="n">X_cols</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">body</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+                <span class="n">coords</span> <span class="o">=</span> <span class="n">_insert_mode_coord</span><span class="p">(</span><span class="n">other_coords</span><span class="p">,</span> <span class="n">mode_vals</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">mode</span><span class="p">,</span> <span class="n">num_idxs</span><span class="p">)</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">coords</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">Y</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">row</span> <span class="o">@</span> <span class="n">X</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">jax</span><span class="o">.</span><span class="n">lax</span><span class="o">.</span><span class="n">fori_loop</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">X_cols</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">matmat</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_jax_rmatmat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a jitted function computing A^H @ Y via lax.fori_loop.&quot;&quot;&quot;</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callable</span>
+        <span class="n">other_coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_other_coords</span>
+        <span class="n">mode_vals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mode_vals</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mode</span>
+        <span class="n">num_idxs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_idxs</span>
+        <span class="n">num_rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_rows</span>
+        <span class="n">num_cols_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span>
+
+        <span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">rmatmat</span><span class="p">(</span><span class="n">Y</span><span class="p">):</span>
+            <span class="n">Y_cols</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">body</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">Z</span><span class="p">):</span>
+                <span class="n">coords</span> <span class="o">=</span> <span class="n">_insert_mode_coord</span><span class="p">(</span><span class="n">other_coords</span><span class="p">,</span> <span class="n">mode_vals</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">mode</span><span class="p">,</span> <span class="n">num_idxs</span><span class="p">)</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">coords</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">Z</span> <span class="o">+</span> <span class="n">jnp</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">row</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
+
+            <span class="k">return</span> <span class="n">jax</span><span class="o">.</span><span class="n">lax</span><span class="o">.</span><span class="n">fori_loop</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_cols_val</span><span class="p">,</span> <span class="n">Y_cols</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">rmatmat</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Paul Virally.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

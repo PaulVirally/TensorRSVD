@@ -1,0 +1,290 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mathematical Background &mdash; TensorRSVD 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Public API" href="api_reference.html" />
+    <link rel="prev" title="User Guide" href="user_guide.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            TensorRSVD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Mathematical Background</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#tensors-and-notation">Tensors and Notation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mode-m-unfolding-matricization">Mode-m Unfolding (Matricization)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tucker-decomposition-and-hosvd">Tucker Decomposition and HOSVD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#randomized-svd">Randomized SVD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tensor-free-approach">Tensor-Free Approach</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">Public API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.html">Core Internals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backends.html">Backends</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TensorRSVD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Mathematical Background</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/theory.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="mathematical-background">
+<h1>Mathematical Background<a class="headerlink" href="#mathematical-background" title="Link to this heading"></a></h1>
+<p>This page provides the mathematical foundations underlying TensorRSVD. Readers
+familiar with tensor decompositions can jump directly to <a class="reference internal" href="#randomized-svd"><span class="std std-ref">Randomized SVD</span></a>
+or <a class="reference internal" href="#tensor-free-approach"><span class="std std-ref">Tensor-Free Approach</span></a>.</p>
+<nav class="contents local" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#tensors-and-notation" id="id6">Tensors and Notation</a></p></li>
+<li><p><a class="reference internal" href="#mode-m-unfolding-matricization" id="id7">Mode-m Unfolding (Matricization)</a></p></li>
+<li><p><a class="reference internal" href="#tucker-decomposition-and-hosvd" id="id8">Tucker Decomposition and HOSVD</a></p></li>
+<li><p><a class="reference internal" href="#randomized-svd" id="id9">Randomized SVD</a></p></li>
+<li><p><a class="reference internal" href="#tensor-free-approach" id="id10">Tensor-Free Approach</a></p></li>
+</ul>
+</nav>
+<section id="tensors-and-notation">
+<span id="id1"></span><h2><a class="toc-backref" href="#id6" role="doc-backlink">Tensors and Notation</a><a class="headerlink" href="#tensors-and-notation" title="Link to this heading"></a></h2>
+<p>For the purposes of this library, a tensor of order <span class="math notranslate nohighlight">\(k\)</span> is a
+multi-dimensional array</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{T} \in \mathbb{C}^{n_1 \times n_2 \times \cdots \times n_k},\]</div>
+<p>indexed by <span class="math notranslate nohighlight">\(\mathcal{T}_{i_1, i_2, \ldots, i_k}\)</span> where
+<span class="math notranslate nohighlight">\(0 \le i_m &lt; n_m\)</span> for each mode <span class="math notranslate nohighlight">\(m\)</span>. Ordinary matrices are
+order-2 tensors and vectors are order-1 tensors.</p>
+<p><strong>Callable representation.</strong> TensorRSVD never stores <span class="math notranslate nohighlight">\(\mathcal{T}\)</span> as a
+dense array. Instead it represents the tensor as a Python callable (i.e.,
+function)</p>
+<div class="math notranslate nohighlight">
+\[f : [0,1]^k \to \mathbb{C},\]</div>
+<p>where each coordinate <span class="math notranslate nohighlight">\(x_m = i_m / (n_m - 1)\)</span> is the <em>normalized</em> grid
+position of index <span class="math notranslate nohighlight">\(i_m\)</span> in mode <span class="math notranslate nohighlight">\(m\)</span>. This means the grid spans
+<span class="math notranslate nohighlight">\([0, 1]\)</span> uniformly in every mode.</p>
+<p>The callable must be fully vectorized: each argument <span class="math notranslate nohighlight">\(x_m\)</span> is a NumPy
+(or JAX / CuPy) array, and the function returns an array of the same shape with
+the corresponding tensor values.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1"># T(x0, x1, x2) = exp(-(x0^2 + x1^2 + x2^2))  (3-D Gaussian)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">gaussian</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x0</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x1</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x2</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="mode-m-unfolding-matricization">
+<span id="matricization"></span><h2><a class="toc-backref" href="#id7" role="doc-backlink">Mode-m Unfolding (Matricization)</a><a class="headerlink" href="#mode-m-unfolding-matricization" title="Link to this heading"></a></h2>
+<p>The mode-<span class="math notranslate nohighlight">\(m\)</span> unfolding (or matricization) of <span class="math notranslate nohighlight">\(\mathcal{T}\)</span>
+is the matrix</p>
+<div class="math notranslate nohighlight">
+\[T_{(m)} \in \mathbb{C}^{n_m \times N_m},
+\qquad N_m = \prod_{j \ne m} n_j,\]</div>
+<p>obtained by making the mode-<span class="math notranslate nohighlight">\(m\)</span> index the row index and collapsing all
+remaining indices into a single column index in C (row-major) order.</p>
+<p>Concretely, the element in row <span class="math notranslate nohighlight">\(i_m\)</span> and the column that corresponds to
+multi-index <span class="math notranslate nohighlight">\((i_0, \ldots, i_{m-1}, i_{m+1}, \ldots, i_{k-1})\)</span> is</p>
+<div class="math notranslate nohighlight">
+\[\bigl[T_{(m)}\bigr]_{i_m,\, \mathrm{col}} = \mathcal{T}_{i_0, \ldots, i_{k-1}}.\]</div>
+<p>Each row of <span class="math notranslate nohighlight">\(T_{(m)}\)</span> is a <em>mode-m fiber</em>: the 1-D section of the
+tensor obtained by varying index <span class="math notranslate nohighlight">\(i_m\)</span> while holding all other indices
+fixed.</p>
+<p>Mode-m unfoldings are the key primitive behind HOSVD: the SVD of <span class="math notranslate nohighlight">\(T_{(m)}\)</span>
+gives the most important “directions” of <span class="math notranslate nohighlight">\(\mathcal{T}\)</span> along mode
+<span class="math notranslate nohighlight">\(m\)</span>.</p>
+</section>
+<section id="tucker-decomposition-and-hosvd">
+<span id="tucker-hosvd"></span><h2><a class="toc-backref" href="#id8" role="doc-backlink">Tucker Decomposition and HOSVD</a><a class="headerlink" href="#tucker-decomposition-and-hosvd" title="Link to this heading"></a></h2>
+<p>The Tucker decomposition expresses a tensor approximately as</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{T} \approx \mathcal{G} \times_1 U_1 \times_2 U_2 \cdots \times_k U_k,\]</div>
+<p>where</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\mathcal{G} \in \mathbb{C}^{r_1 \times r_2 \times \cdots \times r_k}\)</span> is the core tensor,</p></li>
+<li><p><span class="math notranslate nohighlight">\(U_m \in \mathbb{C}^{n_m \times r_m}\)</span> is the factor matrix for mode <span class="math notranslate nohighlight">\(m\)</span> (orthonormal columns),</p></li>
+<li><p><span class="math notranslate nohighlight">\(\times_m\)</span> denotes the mode-m product: contracting the <span class="math notranslate nohighlight">\(m\)</span>-th index of <span class="math notranslate nohighlight">\(\mathcal{G}\)</span> with <span class="math notranslate nohighlight">\(U_m\)</span>.</p></li>
+</ul>
+<p>The integer tuple <span class="math notranslate nohighlight">\((r_1, \ldots, r_k)\)</span> is called the Tucker rank.</p>
+<p><strong>HOSVD construction.</strong>
+The Higher-Order SVD (HOSVD) <a class="reference internal" href="#dlv2000" id="id2"><span>[DLV2000]</span></a> computes each factor matrix <span class="math notranslate nohighlight">\(U_m\)</span>
+as the leading <span class="math notranslate nohighlight">\(r_m\)</span> left singular vectors of the mode-m unfolding:</p>
+<div class="math notranslate nohighlight">
+\[T_{(m)} = U_m \Sigma_m V_m^\dagger, \qquad U_m \in \mathbb{C}^{n_m \times r_m}.\]</div>
+<p>The mode-m singular values <span class="math notranslate nohighlight">\(\sigma_1^{(m)} \ge \sigma_2^{(m)} \ge
+\cdots \ge 0\)</span> (the diagonal of <span class="math notranslate nohighlight">\(\Sigma_m\)</span>) measure how much energy
+<span class="math notranslate nohighlight">\(\mathcal{T}\)</span> has in each direction along mode <span class="math notranslate nohighlight">\(m\)</span>. Truncating to
+rank <span class="math notranslate nohighlight">\(r_m\)</span> discards the directions that carry least energy.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>TensorRSVD returns the factor matrices <span class="math notranslate nohighlight">\(U_m\)</span> and the mode-m singular
+values <span class="math notranslate nohighlight">\(\Sigma_m\)</span> but not the core tensor <span class="math notranslate nohighlight">\(\mathcal{G}\)</span>.
+See <a class="reference internal" href="user_guide.html#user-guide-reconstruction"><span class="std std-ref">Reconstructing the Tensor</span></a> in the User Guide for how to recover
+<span class="math notranslate nohighlight">\(\mathcal{G}\)</span> if needed.</p>
+</div>
+</section>
+<section id="randomized-svd">
+<span id="id3"></span><h2><a class="toc-backref" href="#id9" role="doc-backlink">Randomized SVD</a><a class="headerlink" href="#randomized-svd" title="Link to this heading"></a></h2>
+<p>Computing the exact SVD of <span class="math notranslate nohighlight">\(T_{(m)}\)</span> requires forming the matrix
+explicitly, which costs <span class="math notranslate nohighlight">\(\mathcal{O}(n_m \cdot N_m)\)</span> memory and
+<span class="math notranslate nohighlight">\(\mathcal{O}(n_m^2 \cdot N_m)\)</span> time.</p>
+<p>TensorRSVD uses the randomized SVD algorithm of Halko, Martinsson, and Tropp
+<a class="reference internal" href="#hmt2011" id="id4"><span>[HMT2011]</span></a>.</p>
+<p><strong>Stage 1 — Range finder.</strong>
+Find an orthonormal matrix <span class="math notranslate nohighlight">\(Q \in \mathbb{C}^{n_m \times \ell}\)</span>,
+<span class="math notranslate nohighlight">\(\ell = r_m + p\)</span>, whose column space approximates the range of
+<span class="math notranslate nohighlight">\(T_{(m)}\)</span>:</p>
+<ol class="arabic">
+<li><p>Draw a Gaussian random matrix
+<span class="math notranslate nohighlight">\(\Omega \in \mathbb{C}^{N_m \times \ell}\)</span>.</p></li>
+<li><p>Form the sketch <span class="math notranslate nohighlight">\(Y = T_{(m)} \Omega \in \mathbb{C}^{n_m \times \ell}\)</span>.</p></li>
+<li><p>Orthonormalize: <span class="math notranslate nohighlight">\(Q, \_ = \mathrm{QR}(Y)\)</span>.</p></li>
+<li><p>Power iterations (optional, controlled by <code class="docutils literal notranslate"><span class="pre">num_power_iterations</span></code>):
+repeat <span class="math notranslate nohighlight">\(q\)</span> times</p>
+<div class="math notranslate nohighlight">
+\[Q \leftarrow \mathrm{QR}\!\left(T_{(m)}^\dagger Q\right), \qquad
+Q \leftarrow \mathrm{QR}\!\left(T_{(m)} Q\right).\]</div>
+<p>Each iteration sharpens the range estimate, at the cost of two additional
+passes through the operator.</p>
+</li>
+</ol>
+<p>The oversampling parameter <span class="math notranslate nohighlight">\(p\)</span> (<code class="docutils literal notranslate"><span class="pre">num_oversamples</span></code>) provides a cushion: a
+value of 5–10 is usually sufficient for near-exact results.</p>
+<p><strong>Stage 2 — Compression and small SVD.</strong>
+Project the operator into the <span class="math notranslate nohighlight">\(\ell\)</span>-dimensional subspace spanned by
+<span class="math notranslate nohighlight">\(Q\)</span> and perform a cheap dense SVD:</p>
+<ol class="arabic simple">
+<li><p>Compute <span class="math notranslate nohighlight">\(B^\dagger = T_{(m)}^\dagger Q \in \mathbb{C}^{N_m \times \ell}\)</span>.</p></li>
+<li><p>Factorize: <span class="math notranslate nohighlight">\(B^\dagger = \hat{Q} R\)</span> (QR decomposition).</p></li>
+<li><p>Small SVD: <span class="math notranslate nohighlight">\(R = \hat{U} \Sigma \hat{V}^\dagger\)</span>.</p></li>
+<li><p>Recover left singular vectors: <span class="math notranslate nohighlight">\(U_m = Q \hat{V}[:, :r_m]\)</span>.</p></li>
+<li><p>Singular values: <span class="math notranslate nohighlight">\(S_m = \Sigma[:r_m]\)</span>.</p></li>
+</ol>
+<p>The dominant cost is Step 1 (two matrix-vector products with <span class="math notranslate nohighlight">\(T_{(m)}\)</span> per
+power iteration), each of which costs <span class="math notranslate nohighlight">\(O(\ell \cdot n_m \cdot N_m)\)</span>. Since
+<span class="math notranslate nohighlight">\(\ell \ll \min(n_m, N_m)\)</span>, this is far cheaper than exact SVD.</p>
+</section>
+<section id="tensor-free-approach">
+<span id="id5"></span><h2><a class="toc-backref" href="#id10" role="doc-backlink">Tensor-Free Approach</a><a class="headerlink" href="#tensor-free-approach" title="Link to this heading"></a></h2>
+<p>The critical insight is that Stage 1 and Stage 2 only require matrix–matrix
+products <span class="math notranslate nohighlight">\(T_{(m)} X\)</span> and <span class="math notranslate nohighlight">\(T_{(m)}^\dagger Y\)</span> — never the explicit
+matrix <span class="math notranslate nohighlight">\(T_{(m)}\)</span>.</p>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">MatricizedTensorOperator</span></code> implements these products
+on the fly using the callable <span class="math notranslate nohighlight">\(f\)</span>:</p>
+<ul class="simple">
+<li><p><strong>Forward product</strong> <span class="math notranslate nohighlight">\(T_{(m)} X\)</span>: iterate over rows <span class="math notranslate nohighlight">\(i_m\)</span> of
+<span class="math notranslate nohighlight">\(T_{(m)}\)</span>. Row <span class="math notranslate nohighlight">\(i_m\)</span> equals <span class="math notranslate nohighlight">\(f(x_0, \ldots, x_{m-1},
+x_m^{(i_m)}, x_{m+1}, \ldots, x_{k-1})\)</span> evaluated over all combinations of the
+remaining indices — one vectorized call per row. Contract with the
+corresponding rows of <span class="math notranslate nohighlight">\(X\)</span> and accumulate.</p></li>
+<li><p><strong>Adjoint product</strong> <span class="math notranslate nohighlight">\(T_{(m)}^\dagger Y\)</span>: the same row evaluations, but now
+each row value is an outer product contribution to <span class="math notranslate nohighlight">\(T_{(m)}^\dagger Y\)</span>.</p></li>
+</ul>
+<p>The tensor <span class="math notranslate nohighlight">\(\mathcal{T}\)</span> is never materialized as a dense array. Only
+<span class="math notranslate nohighlight">\(\mathcal{O}(\ell \cdot n_m)\)</span> intermediates are required at any one time.</p>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="hmt2011" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id4">HMT2011</a><span class="fn-bracket">]</span></span>
+<p>Halko, N., Martinsson, P.-G., &amp; Tropp, J. A. (2011).
+Finding structure with randomness: Probabilistic algorithms for
+constructing approximate matrix decompositions.
+<em>SIAM Review</em>, 53(2), 217–288.
+<a class="reference external" href="https://doi.org/10.1137/090771806">https://doi.org/10.1137/090771806</a></p>
+</div>
+<div class="citation" id="dlv2000" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">DLV2000</a><span class="fn-bracket">]</span></span>
+<p>De Lathauwer, L., De Moor, B., &amp; Vandewalle, J. (2000).
+A multilinear singular value decomposition.
+<em>SIAM Journal on Matrix Analysis and Applications</em>, 21(4), 1253–1278.
+<a class="reference external" href="https://doi.org/10.1137/S0895479896305696">https://doi.org/10.1137/S0895479896305696</a></p>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="user_guide.html" class="btn btn-neutral float-left" title="User Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api_reference.html" class="btn btn-neutral float-right" title="Public API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Paul Virally.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

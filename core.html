@@ -1,0 +1,247 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Core Internals &mdash; TensorRSVD 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Backends" href="backends.html" />
+    <link rel="prev" title="Public API" href="api_reference.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            TensorRSVD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Mathematical Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">Public API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Core Internals</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#matricization-operator">Matricization operator</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#tensorrsvd.core.matricization.MatricizedTensorOperator"><code class="docutils literal notranslate"><span class="pre">MatricizedTensorOperator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#randomized-svd">Randomized SVD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#tensorrsvd.core.rsvd.randomized_range_finder"><code class="docutils literal notranslate"><span class="pre">randomized_range_finder()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tensorrsvd.core.rsvd.rsvd_left"><code class="docutils literal notranslate"><span class="pre">rsvd_left()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="backends.html">Backends</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TensorRSVD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Core Internals</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/core.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="core-internals">
+<h1>Core Internals<a class="headerlink" href="#core-internals" title="Link to this heading"></a></h1>
+<p>These modules implement the two algorithmic building blocks that power
+<a class="reference internal" href="api_reference.html#tensorrsvd.ho_svd_r" title="tensorrsvd.ho_svd_r"><code class="xref py py-func docutils literal notranslate"><span class="pre">tensorrsvd.ho_svd_r()</span></code></a>. They are not part of the public API but are
+documented here for contributors and anyone who wants to use the primitives
+directly.</p>
+<p>For the mathematical description of both components see
+<a class="reference internal" href="theory.html#tensor-free-approach"><span class="std std-ref">Tensor-Free Approach</span></a> and <a class="reference internal" href="theory.html#randomized-svd"><span class="std std-ref">Randomized SVD</span></a> in the <a class="reference internal" href="theory.html"><span class="doc">Theory</span></a> page.</p>
+<section id="matricization-operator">
+<h2>Matricization operator<a class="headerlink" href="#matricization-operator" title="Link to this heading"></a></h2>
+<p>The key idea behind TensorRSVD is that a mode-<em>m</em> unfolding of the tensor can be
+exposed as a <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.LinearOperator.html#pylops.LinearOperator" title="(in PyLops dev)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pylops.LinearOperator</span></code></a> without ever forming the dense
+matrix. The operator evaluates the tensor callable on-the-fly whenever a
+matrix–vector (or matrix–matrix) product is requested.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="tensorrsvd.core.matricization.MatricizedTensorOperator">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">tensorrsvd.core.matricization.</span></span><span class="sig-name descname"><span class="pre">MatricizedTensorOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor_callable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/core/matricization.html#MatricizedTensorOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.core.matricization.MatricizedTensorOperator" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://pylops.readthedocs.io/en/stable/api/generated/pylops.LinearOperator.html#pylops.LinearOperator" title="(in PyLops dev)"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearOperator</span></code></a></p>
+<p>Linear operator for the mode-m unfolding of a tensor defined by a callable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor_callable</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>) – Vectorized callable accepting k array arguments (coordinates in [0, 1])
+and returning the tensor values at those coordinates. Must be
+JAX-traceable if backend == ‘jax’.</p></li>
+<li><p><strong>tensor_shape</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple[int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">]</span></code>) – Shape of the tensor (n_0, n_1, …, n_{k-1}).</p></li>
+<li><p><strong>mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Mode along which to unfold.</p></li>
+<li><p><strong>dtype</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">npt.DTypeLike</span></code>) – Data type of the operator.</p></li>
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Array backend: ‘numpy’, ‘cupy’, or ‘jax’.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="tensorrsvd.core.matricization.MatricizedTensorOperator.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor_callable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/core/matricization.html#MatricizedTensorOperator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.core.matricization.MatricizedTensorOperator.__init__" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor_callable</strong> (<a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.14)"><em>Callable</em></a>)</p></li>
+<li><p><strong>tensor_shape</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><em>tuple</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>...</em><em>]</em>)</p></li>
+<li><p><strong>mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
+<li><p><strong>dtype</strong> (<em>DTypeLike</em>)</p></li>
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="randomized-svd">
+<h2>Randomized SVD<a class="headerlink" href="#randomized-svd" title="Link to this heading"></a></h2>
+<p>The randomized SVD is implemented in two stages:</p>
+<ol class="arabic simple">
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">randomized_range_finder()</span></code> builds an orthonormal basis <span class="math notranslate nohighlight">\(Q\)</span> for the
+approximate column space of the operator using a Gaussian sketch and optional
+power iterations.</p></li>
+<li><p><code class="xref py py-func docutils literal notranslate"><span class="pre">rsvd_left()</span></code> calls the range finder and then extracts the leading
+singular values and left singular vectors via a small dense SVD.</p></li>
+</ol>
+<dl class="py function">
+<dt class="sig sig-object py" id="tensorrsvd.core.rsvd.randomized_range_finder">
+<span class="sig-prename descclassname"><span class="pre">tensorrsvd.core.rsvd.</span></span><span class="sig-name descname"><span class="pre">randomized_range_finder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_oversamples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_power_iterations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/core/rsvd.html#randomized_range_finder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.core.rsvd.randomized_range_finder" title="Link to this definition"></a></dt>
+<dd><p>Compute an orthonormal matrix Q whose range approximates the range of op, i.e., “math:<cite>op approx Q Q^dagger op</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>op</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">LinearOperator</span></code>) – The linear operator for which to find the range.</p></li>
+<li><p><strong>rank</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Target rank for the approximation.</p></li>
+<li><p><strong>num_oversamples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Number of additional random vectors to sample (beyond the target rank) to improve accuracy.</p></li>
+<li><p><strong>num_power_iterations</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Number of power iterations to perform to improve the approximation of the range. Each iteration involves multiplying by op and its adjoint, which can help capture the dominant singular vectors more accurately, especially when the singular values decay slowly.</p></li>
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Backend to use for computations. Supported backends are ‘numpy’, ‘jax’,
+and ‘cupy’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Q</strong> – Orthonormal matrix of shape (m, rank) whose range approximates the range of op, where m is the number of rows of op.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayLike</span></code></p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p><a class="reference internal" href="theory.html#hmt2011" id="id1"><span>[HMT2011]</span></a></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tensorrsvd.core.rsvd.rsvd_left">
+<span class="sig-prename descclassname"><span class="pre">tensorrsvd.core.rsvd.</span></span><span class="sig-name descname"><span class="pre">rsvd_left</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_oversamples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_power_iterations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/core/rsvd.html#rsvd_left"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.core.rsvd.rsvd_left" title="Link to this definition"></a></dt>
+<dd><p>Compute the left singular vectors and values of op using randomized SVD.</p>
+<p>Returns (U, S) such that op ≈ U &#64; diag(S) &#64; V^H (where V^H is not returned)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>op</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">LinearOperator</span></code>) – The linear operator to decompose.</p></li>
+<li><p><strong>rank</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Target rank for the approximation.</p></li>
+<li><p><strong>num_oversamples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Number of additional random vectors to sample (beyond the target rank) to improve accuracy.</p></li>
+<li><p><strong>num_power_iterations</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Number of power iterations to perform to improve the approximation of the range. Each iteration involves multiplying by op and its adjoint, which can help capture the dominant singular vectors more accurately, especially when the singular values decay slowly.</p></li>
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Backend to use for computations. Supported backends are ‘numpy’, ‘jax’,
+and ‘cupy’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>U</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayLike</span></code>) – Approximate left singular vectors of op, shape (m, rank).</p></li>
+<li><p><strong>S</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayLike</span></code>) – Approximate singular values of op, shape (rank,).</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a>[<em>ArrayLike</em>, <em>ArrayLike</em>]</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<p>Halko, N., Martinsson, P.-G., &amp; Tropp, J. A. (2011).
+Finding structure with randomness: Probabilistic algorithms for
+constructing approximate matrix decompositions.
+<em>SIAM Review</em>, 53(2), 217–288.
+<a class="reference external" href="https://doi.org/10.1137/090771806">https://doi.org/10.1137/090771806</a></p>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="api_reference.html" class="btn btn-neutral float-left" title="Public API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="backends.html" class="btn btn-neutral float-right" title="Backends" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Paul Virally.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

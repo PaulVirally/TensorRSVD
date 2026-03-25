@@ -1,0 +1,195 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TensorRSVD &mdash; TensorRSVD 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            TensorRSVD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Mathematical Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">Public API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.html">Core Internals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backends.html">Backends</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">TensorRSVD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">TensorRSVD</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tensorrsvd">
+<h1>TensorRSVD<a class="headerlink" href="#tensorrsvd" title="Link to this heading"></a></h1>
+<p><strong>TensorRSVD</strong> is a Python library for tensor-free randomized Higher-Order SVD
+(HOSVD), also known as the randomized Tucker decomposition.</p>
+<p>Rather than storing the tensor as a dense array, TensorRSVD represents it as a
+function that returns tensor values at requested coordinates. This makes the
+decomposition memory-efficient, i.e., it can handle tensors that are too large
+to hold in memory. The library supports three array backends: NumPy (default),
+JAX, and CuPy. See <a class="reference internal" href="backends.html"><span class="doc">Backends</span></a> for details.</p>
+<p><strong>Quick start</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tensorrsvd</span><span class="w"> </span><span class="kn">import</span> <span class="n">ho_svd_r</span>
+
+<span class="c1"># Tensor defined as a callable: T(x0, x1, x2) = x0 - x1 + x2</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">my_tensor</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x0</span> <span class="o">-</span> <span class="n">x1</span> <span class="o">+</span> <span class="n">x2</span>
+
+<span class="n">U_list</span><span class="p">,</span> <span class="n">S_list</span> <span class="o">=</span> <span class="n">ho_svd_r</span><span class="p">(</span>
+    <span class="n">tensor</span><span class="o">=</span><span class="n">my_tensor</span><span class="p">,</span>
+    <span class="n">tensor_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span>
+    <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+    <span class="n">rank</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">num_oversamples</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">num_power_iterations</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">num_idxs</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;numpy&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">U_list[m]</span></code> is the <span class="math notranslate nohighlight">\((n_m \times r_m)\)</span> factor matrix for mode <span class="math notranslate nohighlight">\(m\)</span>
+and <code class="docutils literal notranslate"><span class="pre">S_list[m]</span></code> contains the corresponding mode-<span class="math notranslate nohighlight">\(m\)</span> singular values. See
+the <a class="reference internal" href="user_guide.html"><span class="doc">User Guide</span></a> for a full walkthrough, and the <a class="reference internal" href="theory.html"><span class="doc">Theory</span></a> page for the underlying mathematics.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#from-pypi">From PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#optional-backends">Optional backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#verifying-the-installation">Verifying the installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#defining-a-tensor-as-a-callable">Defining a Tensor as a Callable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#running-ho-svd-r">Running <code class="docutils literal notranslate"><span class="pre">ho_svd_r</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#interpreting-the-output">Interpreting the Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#reconstructing-the-tensor">Reconstructing the Tensor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#switching-backends">Switching Backends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#choosing-good-parameters">Choosing Good Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Mathematical Background</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="theory.html#tensors-and-notation">Tensors and Notation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theory.html#mode-m-unfolding-matricization">Mode-m Unfolding (Matricization)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theory.html#tucker-decomposition-and-hosvd">Tucker Decomposition and HOSVD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theory.html#randomized-svd">Randomized SVD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="theory.html#tensor-free-approach">Tensor-Free Approach</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">Public API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#tensorrsvd.ho_svd_r"><code class="docutils literal notranslate"><span class="pre">ho_svd_r()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="core.html">Core Internals</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="core.html#matricization-operator">Matricization operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#randomized-svd">Randomized SVD</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="backends.html">Backends</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="backends.html#tensorrsvd.backends.get_qr"><code class="docutils literal notranslate"><span class="pre">get_qr()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="backends.html#tensorrsvd.backends.get_svd"><code class="docutils literal notranslate"><span class="pre">get_svd()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="backends.html#tensorrsvd.backends.get_normal"><code class="docutils literal notranslate"><span class="pre">get_normal()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="backends.html#tensorrsvd.backends.get_arange"><code class="docutils literal notranslate"><span class="pre">get_arange()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="backends.html#tensorrsvd.backends.get_meshgrid"><code class="docutils literal notranslate"><span class="pre">get_meshgrid()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="backends.html#tensorrsvd.backends.get_empty"><code class="docutils literal notranslate"><span class="pre">get_empty()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="backends.html#tensorrsvd.backends.get_zeros"><code class="docutils literal notranslate"><span class="pre">get_zeros()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="backends.html#tensorrsvd.backends.get_conj"><code class="docutils literal notranslate"><span class="pre">get_conj()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="backends.html#tensorrsvd.backends.get_ravel"><code class="docutils literal notranslate"><span class="pre">get_ravel()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="backends.html#tensorrsvd.backends.is_complex"><code class="docutils literal notranslate"><span class="pre">is_complex()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="backends.html#tensorrsvd.backends.real_dtype"><code class="docutils literal notranslate"><span class="pre">real_dtype()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Paul Virally.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
