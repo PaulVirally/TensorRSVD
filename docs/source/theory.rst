@@ -131,7 +131,7 @@ explicitly, which costs :math:`\mathcal{O}(n_m \cdot N_m)` memory and
 TensorRSVD uses the randomized SVD algorithm of Halko, Martinsson, and Tropp
 [HMT2011]_.
 
-**Stage 1 — Range finder.**
+**1. Range finder.**
 Find an orthonormal matrix :math:`Q \in \mathbb{C}^{n_m \times \ell}`,
 :math:`\ell = r_m + p`, whose column space approximates the range of
 :math:`T_{(m)}`:
@@ -154,7 +154,7 @@ Find an orthonormal matrix :math:`Q \in \mathbb{C}^{n_m \times \ell}`,
 The oversampling parameter :math:`p` (``num_oversamples``) provides a cushion: a
 value of 5–10 is usually sufficient for near-exact results.
 
-**Stage 2 — Compression and small SVD.**
+**2. Compression and small SVD.**
 Project the operator into the :math:`\ell`-dimensional subspace spanned by
 :math:`Q` and perform a cheap dense SVD:
 
@@ -173,8 +173,8 @@ power iteration), each of which costs :math:`O(\ell \cdot n_m \cdot N_m)`. Since
 Tensor-Free Approach
 ---------------------
 
-The critical insight is that Stage 1 and Stage 2 only require matrix–matrix
-products :math:`T_{(m)} X` and :math:`T_{(m)}^\dagger Y` — never the explicit
+The critical insight is that step 1 and step 2 only require matrix-matrix
+products :math:`T_{(m)} X` and :math:`T_{(m)}^\dagger Y`, never the explicit
 matrix :math:`T_{(m)}`.
 
 :class:`~tensorrsvd.core.MatricizedTensorOperator` implements these products
@@ -183,7 +183,7 @@ on the fly using the callable :math:`f`:
 - **Forward product** :math:`T_{(m)} X`: iterate over rows :math:`i_m` of
   :math:`T_{(m)}`. Row :math:`i_m` equals :math:`f(x_0, \ldots, x_{m-1},
   x_m^{(i_m)}, x_{m+1}, \ldots, x_{k-1})` evaluated over all combinations of the
-  remaining indices — one vectorized call per row. Contract with the
+  remaining indices with one vectorized call per row. Contract with the
   corresponding rows of :math:`X` and accumulate.
 
 - **Adjoint product** :math:`T_{(m)}^\dagger Y`: the same row evaluations, but now
@@ -197,10 +197,10 @@ The tensor :math:`\mathcal{T}` is never materialized as a dense array. Only
 .. [HMT2011] Halko, N., Martinsson, P.-G., & Tropp, J. A. (2011).
    Finding structure with randomness: Probabilistic algorithms for
    constructing approximate matrix decompositions.
-   *SIAM Review*, 53(2), 217–288.
+   *SIAM Review*, 53(2), 217-288.
    https://doi.org/10.1137/090771806
 
 .. [DLV2000] De Lathauwer, L., De Moor, B., & Vandewalle, J. (2000).
    A multilinear singular value decomposition.
-   *SIAM Journal on Matrix Analysis and Applications*, 21(4), 1253–1278.
+   *SIAM Journal on Matrix Analysis and Applications*, 21(4), 1253-1278.
    https://doi.org/10.1137/S0895479896305696

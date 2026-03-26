@@ -36,7 +36,7 @@ CuPy (NVIDIA GPU) must be installed separately following the
 import numpy as np
 from tensorrsvd import ho_rsvd
 
-# Define your tensor as a callable — no dense array needed
+# Define your tensor as a callable
 def my_tensor(x0, x1, x2):
     return x0 - x1 + x2
 
@@ -50,8 +50,8 @@ U_list, S_list = ho_rsvd(
     num_idxs=3,
 )
 
-# U_list[i] has shape (n_i, rank_i) — orthonormal columns
-# S_list[i] has shape (rank_i,)      — singular values, descending
+# U_list[i] has shape (n_i, rank_i) with orthonormal columns
+# S_list[i] has shape (rank_i,) (descending singular values)
 print([U.shape for U in U_list])   # [(64, 4), (64, 4), (64, 4)]
 ```
 
