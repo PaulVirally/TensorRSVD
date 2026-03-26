@@ -13,7 +13,7 @@ def make_alternating_tensor(k: int):
     signs = [(-1) ** i for i in range(k)]
 
     def tensor(*xs):
-        return sum(s * x for s, x in zip(signs, xs))
+        return sum(s * x for s, x in zip(signs, xs, strict=True))
 
     return tensor
 

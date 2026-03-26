@@ -63,8 +63,7 @@ target-version = "py314"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 ignore = [
-    "E501",   # line too long — handled by formatter
-    "B905",   # zip-without-explicit-strict — noisy in scientific code
+    "E501", # line too long (handled by formatter)
 ]
 
 [tool.ruff.lint.isort]
