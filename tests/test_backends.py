@@ -3,14 +3,14 @@ from __future__ import annotations
 import numpy as np
 from conftest import make_alternating_tensor, skip_no_cupy, skip_no_jax
 
-from tensorrsvd import ho_svd_r
+from tensorrsvd import ho_rsvd
 
 K, SHAPE, RANK = 3, (6, 6, 6), 3
 
 
 def _smoke(backend: str):
     fn = make_alternating_tensor(K)
-    U_list, S_list = ho_svd_r(
+    U_list, S_list = ho_rsvd(
         tensor=fn,
         tensor_shape=SHAPE,
         dtype=np.float64,

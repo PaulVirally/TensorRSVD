@@ -10,4 +10,4 @@ mathematical foundations see :doc:`Theory <theory>`.
 
 .. currentmodule:: tensorrsvd
 
-.. autofunction:: ho_svd_r
+.. autofunction:: ho_rsvd

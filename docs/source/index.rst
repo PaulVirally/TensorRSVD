@@ -15,13 +15,13 @@ JAX, and CuPy. See :doc:`backends` for details.
 .. code-block:: python
 
    import numpy as np
-   from tensorrsvd import ho_svd_r
+   from tensorrsvd import ho_rsvd
 
    # Tensor defined as a callable: T(x0, x1, x2) = x0 - x1 + x2
    def my_tensor(x0, x1, x2):
        return x0 - x1 + x2
 
-   U_list, S_list = ho_svd_r(
+   U_list, S_list = ho_rsvd(
        tensor=my_tensor,
        tensor_shape=(32, 32, 32),
        dtype=np.float64,

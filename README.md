@@ -34,14 +34,14 @@ CuPy (NVIDIA GPU) must be installed separately following the
 
 ```python
 import numpy as np
-from tensorrsvd import ho_svd_r
+from tensorrsvd import ho_rsvd
 
 # Define your tensor as a callable — no dense array needed
 def my_tensor(x0, x1, x2):
     return x0 - x1 + x2
 
 # Compute the randomized Tucker factors
-U_list, S_list = ho_svd_r(
+U_list, S_list = ho_rsvd(
     tensor=my_tensor,
     tensor_shape=(64, 64, 64),
     dtype=np.float64,

@@ -57,12 +57,12 @@ Run a quick smoke test from a Python shell:
 .. code-block:: python
 
    import numpy as np
-   from tensorrsvd import ho_svd_r
+   from tensorrsvd import ho_rsvd
 
    def my_tensor(x0, x1, x2):
        return x0 - x1 + x2
 
-   U_list, S_list = ho_svd_r(
+   U_list, S_list = ho_rsvd(
        tensor=my_tensor,
        tensor_shape=(16, 16, 16),
        dtype=np.float64,

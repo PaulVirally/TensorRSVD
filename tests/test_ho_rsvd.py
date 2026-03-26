@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from conftest import make_alternating_tensor
 
-from tensorrsvd import ho_svd_r
+from tensorrsvd import ho_rsvd
 
 
 @pytest.mark.parametrize(
@@ -18,7 +18,7 @@ from tensorrsvd import ho_svd_r
 )
 def test_smoke_runs_without_error(k, shape, rank):
     fn = make_alternating_tensor(k)
-    U_list, S_list = ho_svd_r(
+    U_list, S_list = ho_rsvd(
         tensor=fn,
         tensor_shape=shape,
         dtype=np.float64,
@@ -38,7 +38,7 @@ def test_num_idxs_inferred_from_rank_list():
     k = 3
     shape = (6, 6, 6)
     fn = make_alternating_tensor(k)
-    U_list, S_list = ho_svd_r(
+    U_list, S_list = ho_rsvd(
         tensor=fn,
         tensor_shape=shape,
         dtype=np.float64,
@@ -54,7 +54,7 @@ def test_num_idxs_inferred_from_oversamples_list():
     k = 3
     shape = (6, 6, 6)
     fn = make_alternating_tensor(k)
-    U_list, S_list = ho_svd_r(
+    U_list, S_list = ho_rsvd(
         tensor=fn,
         tensor_shape=shape,
         dtype=np.float64,
@@ -69,7 +69,7 @@ def test_explicit_num_idxs_with_scalar_rank():
     k = 3
     shape = (6, 6, 6)
     fn = make_alternating_tensor(k)
-    U_list, S_list = ho_svd_r(
+    U_list, S_list = ho_rsvd(
         tensor=fn,
         tensor_shape=shape,
         dtype=np.float64,
@@ -90,7 +90,7 @@ def test_explicit_num_idxs_with_scalar_rank():
 )
 def test_factor_matrices_are_orthonormal(k, shape, rank):
     fn = make_alternating_tensor(k)
-    U_list, _ = ho_svd_r(
+    U_list, _ = ho_rsvd(
         tensor=fn,
         tensor_shape=shape,
         dtype=np.float64,
@@ -118,7 +118,7 @@ def test_factor_matrices_are_orthonormal(k, shape, rank):
 )
 def test_singular_values_non_negative_and_decreasing(k, shape, rank):
     fn = make_alternating_tensor(k)
-    _, S_list = ho_svd_r(
+    _, S_list = ho_rsvd(
         tensor=fn,
         tensor_shape=shape,
         dtype=np.float64,
@@ -136,13 +136,13 @@ def test_singular_values_non_negative_and_decreasing(k, shape, rank):
 def test_invalid_backend_raises():
     fn = make_alternating_tensor(2)
     with pytest.raises(ValueError, match="Unsupported backend"):
-        ho_svd_r(fn, (4, 4), np.float64, rank=2, num_idxs=2, backend="bogus")
+        ho_rsvd(fn, (4, 4), np.float64, rank=2, num_idxs=2, backend="bogus")
 
 
 def test_all_scalar_without_num_idxs_raises():
     fn = make_alternating_tensor(2)
     with pytest.raises(ValueError):
-        ho_svd_r(
+        ho_rsvd(
             fn,
             (4, 4),
             np.float64,
@@ -157,4 +157,4 @@ def test_all_scalar_without_num_idxs_raises():
 def test_rank_list_length_mismatch_raises():
     fn = make_alternating_tensor(3)
     with pytest.raises(ValueError):
-        ho_svd_r(fn, (4, 4, 4), np.float64, rank=[2, 2], num_idxs=3, backend="numpy")
+        ho_rsvd(fn, (4, 4, 4), np.float64, rank=[2, 2], num_idxs=3, backend="numpy")

@@ -7,7 +7,7 @@ from numpy.typing import ArrayLike, DTypeLike
 from .core import MatricizedTensorOperator, rsvd_left
 
 
-def ho_svd_r(
+def ho_rsvd(
     tensor: Callable,
     tensor_shape: tuple[int, ...],
     dtype: DTypeLike,
@@ -78,10 +78,10 @@ def ho_svd_r(
     Decompose a simple 3-D linear tensor into Tucker factors:
 
     >>> import numpy as np
-    >>> from tensorrsvd import ho_svd_r
+    >>> from tensorrsvd import ho_rsvd
     >>> def my_tensor(x0, x1, x2):
     ...     return x0 - x1 + x2
-    >>> U_list, S_list = ho_svd_r(
+    >>> U_list, S_list = ho_rsvd(
     ...     tensor=my_tensor,
     ...     tensor_shape=(16, 16, 16),
     ...     dtype=np.float64,
