@@ -33,13 +33,13 @@ jobs:
       - name: Install dev dependencies
         run: uv sync --group dev
 
-      - name: Ruff — check lint rules
+      - name: Ruff: check lint rules
         run: uv run ruff check src/ tests/
 
-      - name: Ruff — check formatting
+      - name: Ruff: check formatting
         run: uv run ruff format --check src/ tests/
 
-      - name: Mypy — type check
+      - name: Mypy: type check
         run: uv run mypy src/tensorrsvd/
 
   test:
