@@ -89,7 +89,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">randomized_range_finder</span><span class="p">(</span>
     <span class="n">op</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">,</span> <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_oversamples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_power_iterations</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArrayLike</span><span class="p">:</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Compute an orthonormal matrix Q whose range approximates the range of op, i.e., &quot;math:`op \approx Q Q^\dagger op`</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Compute an orthonormal matrix Q whose range approximates the range of op, i.e., :math:`op \approx Q Q^\dagger op`</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -100,15 +100,14 @@
 <span class="sd">    num_oversamples : int</span>
 <span class="sd">        Number of additional random vectors to sample (beyond the target rank) to improve accuracy.</span>
 <span class="sd">    num_power_iterations : int</span>
-<span class="sd">        Number of power iterations to perform to improve the approximation of the range. Each iteration involves multiplying by op and its adjoint, which can help capture the dominant singular vectors more accurately, especially when the singular values decay slowly.</span>
+<span class="sd">        Number of power iterations for improved accuracy.</span>
 <span class="sd">    backend : str</span>
-<span class="sd">        Backend to use for computations. Supported backends are &#39;numpy&#39;, &#39;jax&#39;,</span>
-<span class="sd">        and &#39;cupy&#39;.</span>
+<span class="sd">        Backend to use: &#39;numpy&#39;, &#39;jax&#39;, or &#39;cupy&#39;.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    Q : ArrayLike</span>
-<span class="sd">        Orthonormal matrix of shape (m, rank) whose range approximates the range of op, where m is the number of rows of op.</span>
+<span class="sd">        Orthonormal matrix of shape (m, rank + num_oversamples) whose range approximates the range of op, where m is the number of rows of op.</span>
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
@@ -125,7 +124,6 @@
     <span class="n">normal1</span> <span class="o">=</span> <span class="n">get_normal</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">qr</span> <span class="o">=</span> <span class="n">get_qr</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
 
-    <span class="c1"># Sample from a (standard normal) Gaussian distribution</span>
     <span class="k">if</span> <span class="n">is_complex</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
         <span class="n">real_type</span> <span class="o">=</span> <span class="n">real_dtype</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
         <span class="n">omega</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
@@ -134,13 +132,9 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">omega</span> <span class="o">=</span> <span class="n">normal0</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">num_components</span><span class="p">),</span> <span class="n">op</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
 
-    <span class="n">q</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">qr</span><span class="p">(</span>
-        <span class="n">op</span><span class="o">.</span><span class="n">_matmat</span><span class="p">(</span><span class="n">omega</span><span class="p">)</span>
-    <span class="p">)</span>  <span class="c1"># Get an orthonormal basis for the range of Y = op @ omega, which approximates the range of op</span>
+    <span class="n">q</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">qr</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">_matmat</span><span class="p">(</span><span class="n">omega</span><span class="p">))</span>
 
-    <span class="c1"># Power iteration loop:</span>
-    <span class="c1"># Apply op^H @ op (power method) while re-orthonormalizing (through QR) to</span>
-    <span class="c1"># prevent numerical instability</span>
+    <span class="c1"># power iteration with re-orthogonalization</span>
     <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_power_iterations</span><span class="p">):</span>
         <span class="n">q</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">qr</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">_rmatmat</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
         <span class="n">q</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">qr</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">_matmat</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
@@ -167,10 +161,9 @@
 <span class="sd">    num_oversamples : int</span>
 <span class="sd">        Number of additional random vectors to sample (beyond the target rank) to improve accuracy.</span>
 <span class="sd">    num_power_iterations : int</span>
-<span class="sd">        Number of power iterations to perform to improve the approximation of the range. Each iteration involves multiplying by op and its adjoint, which can help capture the dominant singular vectors more accurately, especially when the singular values decay slowly.</span>
+<span class="sd">        Number of power iterations for improved accuracy.</span>
 <span class="sd">    backend : str</span>
-<span class="sd">        Backend to use for computations. Supported backends are &#39;numpy&#39;, &#39;jax&#39;,</span>
-<span class="sd">        and &#39;cupy&#39;.</span>
+<span class="sd">        Backend to use: &#39;numpy&#39;, &#39;jax&#39;, or &#39;cupy&#39;.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>

@@ -217,18 +217,14 @@
         <span class="k">return</span> <span class="n">Y</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_rmatmat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute A^H @ Y where Y is (num_rows, l).</span>
-
-<span class="sd">        Uses a column-wise rank-1 accumulation to avoid allocating an</span>
-<span class="sd">        O(num_cols * l) broadcast temporary per row. Peak working memory</span>
-<span class="sd">        beyond the output buffer is O(num_cols) for a single conjugated row.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute A^H @ Y where Y is (num_rows, l).&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backend</span> <span class="o">==</span> <span class="s2">&quot;jax&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jax_rmatmat_fn</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
         <span class="n">conj</span> <span class="o">=</span> <span class="n">get_conj</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">)</span>
         <span class="n">Y_cols</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">num_cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">Z</span> <span class="o">=</span> <span class="n">get_zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_backend</span><span class="p">)((</span><span class="n">num_cols</span><span class="p">,</span> <span class="n">Y_cols</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="c1"># rank-1 accumulation avoids an O(num_cols * l) broadcast per row</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_rows</span><span class="p">):</span>
             <span class="n">crow</span> <span class="o">=</span> <span class="n">conj</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eval_row</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Y_cols</span><span class="p">):</span>

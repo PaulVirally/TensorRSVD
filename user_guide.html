@@ -48,7 +48,7 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">User Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#defining-a-tensor-as-a-callable">Defining a Tensor as a Callable</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#running-ho-svd-r">Running <code class="docutils literal notranslate"><span class="pre">ho_svd_r</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-ho-rsvd">Running <code class="docutils literal notranslate"><span class="pre">ho_rsvd</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#interpreting-the-output">Interpreting the Output</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#reconstructing-the-tensor">Reconstructing the Tensor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#switching-backends">Switching Backends</a></li>
@@ -94,7 +94,7 @@ parameters, reconstruct the approximation, and switch backends.</p>
 <p class="topic-title">Contents</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#defining-a-tensor-as-a-callable" id="id1">Defining a Tensor as a Callable</a></p></li>
-<li><p><a class="reference internal" href="#running-ho-svd-r" id="id2">Running <code class="docutils literal notranslate"><span class="pre">ho_svd_r</span></code></a></p></li>
+<li><p><a class="reference internal" href="#running-ho-rsvd" id="id2">Running <code class="docutils literal notranslate"><span class="pre">ho_rsvd</span></code></a></p></li>
 <li><p><a class="reference internal" href="#interpreting-the-output" id="id3">Interpreting the Output</a></p></li>
 <li><p><a class="reference internal" href="#reconstructing-the-tensor" id="id4">Reconstructing the Tensor</a></p></li>
 <li><p><a class="reference internal" href="#switching-backends" id="id5">Switching Backends</a></p></li>
@@ -142,17 +142,17 @@ as its inputs.</p>
 and avoid Python control flow that depends on array values.</p>
 </div>
 </section>
-<section id="running-ho-svd-r">
-<span id="user-guide-running"></span><h2><a class="toc-backref" href="#id2" role="doc-backlink">Running <code class="docutils literal notranslate"><span class="pre">ho_svd_r</span></code></a><a class="headerlink" href="#running-ho-svd-r" title="Link to this heading"></a></h2>
-<p>The single public entry point is <a class="reference internal" href="api_reference.html#tensorrsvd.ho_svd_r" title="tensorrsvd.ho_svd_r"><code class="xref py py-func docutils literal notranslate"><span class="pre">tensorrsvd.ho_svd_r()</span></code></a>. A minimal call
+<section id="running-ho-rsvd">
+<span id="user-guide-running"></span><h2><a class="toc-backref" href="#id2" role="doc-backlink">Running <code class="docutils literal notranslate"><span class="pre">ho_rsvd</span></code></a><a class="headerlink" href="#running-ho-rsvd" title="Link to this heading"></a></h2>
+<p>The single public entry point is <a class="reference internal" href="api_reference.html#tensorrsvd.ho_rsvd" title="tensorrsvd.ho_rsvd"><code class="xref py py-func docutils literal notranslate"><span class="pre">tensorrsvd.ho_rsvd()</span></code></a>. A minimal call
 looks like this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">tensorrsvd</span><span class="w"> </span><span class="kn">import</span> <span class="n">ho_svd_r</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tensorrsvd</span><span class="w"> </span><span class="kn">import</span> <span class="n">ho_rsvd</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">my_tensor</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">x0</span> <span class="o">-</span> <span class="n">x1</span> <span class="o">+</span> <span class="n">x2</span>
 
-<span class="n">U_list</span><span class="p">,</span> <span class="n">S_list</span> <span class="o">=</span> <span class="n">ho_svd_r</span><span class="p">(</span>
+<span class="n">U_list</span><span class="p">,</span> <span class="n">S_list</span> <span class="o">=</span> <span class="n">ho_rsvd</span><span class="p">(</span>
     <span class="n">tensor</span><span class="o">=</span><span class="n">my_tensor</span><span class="p">,</span>
     <span class="n">tensor_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span>
     <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
@@ -207,7 +207,7 @@ a list; required when <code class="docutils literal notranslate"><span class="pr
 </section>
 <section id="interpreting-the-output">
 <span id="user-guide-output"></span><h2><a class="toc-backref" href="#id3" role="doc-backlink">Interpreting the Output</a><a class="headerlink" href="#interpreting-the-output" title="Link to this heading"></a></h2>
-<p><a class="reference internal" href="api_reference.html#tensorrsvd.ho_svd_r" title="tensorrsvd.ho_svd_r"><code class="xref py py-func docutils literal notranslate"><span class="pre">ho_svd_r()</span></code></a> returns a pair <code class="docutils literal notranslate"><span class="pre">(U_list,</span> <span class="pre">S_list)</span></code>:</p>
+<p><a class="reference internal" href="api_reference.html#tensorrsvd.ho_rsvd" title="tensorrsvd.ho_rsvd"><code class="xref py py-func docutils literal notranslate"><span class="pre">ho_rsvd()</span></code></a> returns a pair <code class="docutils literal notranslate"><span class="pre">(U_list,</span> <span class="pre">S_list)</span></code>:</p>
 <dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">U_list</span></code></dt><dd><p>A list of <span class="math notranslate nohighlight">\(k\)</span> factor matrices. <code class="docutils literal notranslate"><span class="pre">U_list[m]</span></code> has shape
 <code class="docutils literal notranslate"><span class="pre">(n_m,</span> <span class="pre">rank_m)</span></code> and contains the leading left singular vectors of the
@@ -238,7 +238,7 @@ well approximated at the chosen rank.</p>
 </section>
 <section id="reconstructing-the-tensor">
 <span id="user-guide-reconstruction"></span><h2><a class="toc-backref" href="#id4" role="doc-backlink">Reconstructing the Tensor</a><a class="headerlink" href="#reconstructing-the-tensor" title="Link to this heading"></a></h2>
-<p><a class="reference internal" href="api_reference.html#tensorrsvd.ho_svd_r" title="tensorrsvd.ho_svd_r"><code class="xref py py-func docutils literal notranslate"><span class="pre">ho_svd_r()</span></code></a> returns the factor matrices but not the
+<p><a class="reference internal" href="api_reference.html#tensorrsvd.ho_rsvd" title="tensorrsvd.ho_rsvd"><code class="xref py py-func docutils literal notranslate"><span class="pre">ho_rsvd()</span></code></a> returns the factor matrices but not the
 core tensor <span class="math notranslate nohighlight">\(\mathcal{G}\)</span>. To reconstruct a dense approximation,
 you need to:</p>
 <ol class="arabic simple">
@@ -283,7 +283,7 @@ tasks (dimensionality reduction, feature extraction, compression).</p>
 <section id="switching-backends">
 <span id="user-guide-backends"></span><h2><a class="toc-backref" href="#id5" role="doc-backlink">Switching Backends</a><a class="headerlink" href="#switching-backends" title="Link to this heading"></a></h2>
 <p>Pass <code class="docutils literal notranslate"><span class="pre">backend=&quot;numpy&quot;</span></code> (default), <code class="docutils literal notranslate"><span class="pre">&quot;jax&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;cupy&quot;</span></code> to
-<a class="reference internal" href="api_reference.html#tensorrsvd.ho_svd_r" title="tensorrsvd.ho_svd_r"><code class="xref py py-func docutils literal notranslate"><span class="pre">ho_svd_r()</span></code></a>:</p>
+<a class="reference internal" href="api_reference.html#tensorrsvd.ho_rsvd" title="tensorrsvd.ho_rsvd"><code class="xref py py-func docutils literal notranslate"><span class="pre">ho_rsvd()</span></code></a>:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 15.0%" />
@@ -314,12 +314,12 @@ calls are fast. Tensors must be JAX-traceable.</p></td>
 </table>
 <p><strong>JAX example</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">tensorrsvd</span><span class="w"> </span><span class="kn">import</span> <span class="n">ho_svd_r</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tensorrsvd</span><span class="w"> </span><span class="kn">import</span> <span class="n">ho_rsvd</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">gaussian_jax</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x0</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x1</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x2</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
 
-<span class="n">U_list</span><span class="p">,</span> <span class="n">S_list</span> <span class="o">=</span> <span class="n">ho_svd_r</span><span class="p">(</span>
+<span class="n">U_list</span><span class="p">,</span> <span class="n">S_list</span> <span class="o">=</span> <span class="n">ho_rsvd</span><span class="p">(</span>
     <span class="n">tensor</span><span class="o">=</span><span class="n">gaussian_jax</span><span class="p">,</span>
     <span class="n">tensor_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">),</span>
     <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>

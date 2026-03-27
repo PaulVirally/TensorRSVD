@@ -2,7 +2,7 @@ Core Internals
 ==============
 
 These modules implement the two algorithmic building blocks that power
-:func:`tensorrsvd.ho_svd_r`. They are not part of the public API but are
+:func:`tensorrsvd.ho_rsvd`. They are not part of the public API but are
 documented here for contributors and anyone who wants to use the primitives
 directly.
 

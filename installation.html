@@ -118,20 +118,28 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot
 for additional platform-specific instructions.</p>
 <p><strong>CuPy</strong> (NVIDIA GPU only)</p>
 <p>CuPy offloads all linear-algebra primitives to a CUDA device and is required
-for the <code class="docutils literal notranslate"><span class="pre">backend=&quot;cupy&quot;</span></code> option. Install it following the
-<a class="reference external" href="https://docs.cupy.dev/en/stable/install.html">CuPy installation guide</a>,
-choosing the wheel that matches your CUDA version.</p>
+for the <code class="docutils literal notranslate"><span class="pre">backend=&quot;cupy&quot;</span></code> option.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;tensorrsvd[cupy]&quot;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>CuPy wheels are CUDA-version-specific. If the above does not match your
+CUDA installation, install CuPy manually following the
+<a class="reference external" href="https://docs.cupy.dev/en/stable/install.html">CuPy installation guide</a>
+and choose the wheel that matches your CUDA version.</p>
+</div>
 </section>
 <section id="verifying-the-installation">
 <h2>Verifying the installation<a class="headerlink" href="#verifying-the-installation" title="Link to this heading"></a></h2>
 <p>Run a quick smoke test from a Python shell:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">tensorrsvd</span><span class="w"> </span><span class="kn">import</span> <span class="n">ho_svd_r</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tensorrsvd</span><span class="w"> </span><span class="kn">import</span> <span class="n">ho_rsvd</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">my_tensor</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">x0</span> <span class="o">-</span> <span class="n">x1</span> <span class="o">+</span> <span class="n">x2</span>
 
-<span class="n">U_list</span><span class="p">,</span> <span class="n">S_list</span> <span class="o">=</span> <span class="n">ho_svd_r</span><span class="p">(</span>
+<span class="n">U_list</span><span class="p">,</span> <span class="n">S_list</span> <span class="o">=</span> <span class="n">ho_rsvd</span><span class="p">(</span>
     <span class="n">tensor</span><span class="o">=</span><span class="n">my_tensor</span><span class="p">,</span>
     <span class="n">tensor_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
     <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>

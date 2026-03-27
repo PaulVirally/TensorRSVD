@@ -104,18 +104,13 @@ which return the correct callable for the requested backend.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="tensorrsvd.backends.get_qr">
 <span class="sig-prename descclassname"><span class="pre">tensorrsvd.backends.</span></span><span class="sig-name descname"><span class="pre">get_qr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/backends.html#get_qr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.backends.get_qr" title="Link to this definition"></a></dt>
-<dd><p>Returns correct qr module for the given backend.</p>
+<dd><p>Return the QR decomposition function for the given backend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Backend to use. Supported backends are ‘numpy’, ‘jax’, and ‘cupy’.</p>
+<dd class="field-odd"><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>f</strong> – Function that performs QR decomposition either from
-<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.linalg.qr.html#numpy.linalg.qr" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.linalg.qr</span></code></a> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">jax.numpy.linalg.qr</span></code> or
-<code class="xref py py-obj docutils literal notranslate"><span class="pre">cupy.linalg.qr</span></code></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#callable" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callable</span></code></a></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.14)"><em>Callable</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -123,18 +118,13 @@ which return the correct callable for the requested backend.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="tensorrsvd.backends.get_svd">
 <span class="sig-prename descclassname"><span class="pre">tensorrsvd.backends.</span></span><span class="sig-name descname"><span class="pre">get_svd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/backends.html#get_svd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.backends.get_svd" title="Link to this definition"></a></dt>
-<dd><p>Returns correct svd module for the given backend.</p>
+<dd><p>Return a full_matrices=False SVD function for the given backend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Backend to use. Supported backends are ‘numpy’, ‘jax’, and ‘cupy’.</p>
+<dd class="field-odd"><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>f</strong> – Function that performs SVD either from
-<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.linalg.svd.html#numpy.linalg.svd" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.linalg.svd</span></code></a> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">jax.numpy.linalg.svd</span></code> or
-<code class="xref py py-obj docutils literal notranslate"><span class="pre">cupy.linalg.svd</span></code></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#callable" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callable</span></code></a></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.14)"><em>Callable</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -143,21 +133,16 @@ which return the correct callable for the requested backend.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="tensorrsvd.backends.get_normal">
 <span class="sig-prename descclassname"><span class="pre">tensorrsvd.backends.</span></span><span class="sig-name descname"><span class="pre">get_normal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/backends.html#get_normal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.backends.get_normal" title="Link to this definition"></a></dt>
-<dd><p>Returns correct normal module for the given backend.</p>
+<dd><p>Return a standard-normal sampling function for the given backend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Backend to use. Supported backends are ‘numpy’, ‘jax’, and ‘cupy’.</p></li>
-<li><p><strong>seed</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Random seed to use for normal distribution sampling.</p></li>
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p></li>
+<li><p><strong>seed</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>f</strong> – Function that performs normal distribution sampling either from
-<a class="reference external" href="https://numpy.org/doc/stable/reference/random/generated/numpy.random.normal.html#numpy.random.normal" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.random.normal</span></code></a> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">jax.random.normal</span></code> or
-<code class="xref py py-obj docutils literal notranslate"><span class="pre">cupy.random.normal</span></code></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#callable" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callable</span></code></a></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.14)"><em>Callable</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -166,18 +151,13 @@ which return the correct callable for the requested backend.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="tensorrsvd.backends.get_arange">
 <span class="sig-prename descclassname"><span class="pre">tensorrsvd.backends.</span></span><span class="sig-name descname"><span class="pre">get_arange</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/backends.html#get_arange"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.backends.get_arange" title="Link to this definition"></a></dt>
-<dd><p>Returns correct arange module for the given backend.</p>
+<dd><p>Return the arange function for the given backend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Backend to use. Supported backends are ‘numpy’, ‘jax’, and ‘cupy’.</p>
+<dd class="field-odd"><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>f</strong> – Function that performs arange either from
-<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.arange.html#numpy.arange" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.arange</span></code></a> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">jax.numpy.arange</span></code> or
-<code class="xref py py-obj docutils literal notranslate"><span class="pre">cupy.arange</span></code></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#callable" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callable</span></code></a></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.14)"><em>Callable</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -185,18 +165,13 @@ which return the correct callable for the requested backend.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="tensorrsvd.backends.get_meshgrid">
 <span class="sig-prename descclassname"><span class="pre">tensorrsvd.backends.</span></span><span class="sig-name descname"><span class="pre">get_meshgrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/backends.html#get_meshgrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.backends.get_meshgrid" title="Link to this definition"></a></dt>
-<dd><p>Returns correct meshgrid module for the given backend.</p>
+<dd><p>Return the meshgrid function for the given backend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Backend to use. Supported backends are ‘numpy’, ‘jax’, and ‘cupy’.</p>
+<dd class="field-odd"><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>f</strong> – Function that performs meshgrid either from
-<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.meshgrid.html#numpy.meshgrid" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.meshgrid</span></code></a> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">jax.numpy.meshgrid</span></code> or
-<code class="xref py py-obj docutils literal notranslate"><span class="pre">cupy.meshgrid</span></code></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#callable" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callable</span></code></a></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.14)"><em>Callable</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -204,18 +179,13 @@ which return the correct callable for the requested backend.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="tensorrsvd.backends.get_empty">
 <span class="sig-prename descclassname"><span class="pre">tensorrsvd.backends.</span></span><span class="sig-name descname"><span class="pre">get_empty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/backends.html#get_empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.backends.get_empty" title="Link to this definition"></a></dt>
-<dd><p>Returns correct empty module for the given backend.</p>
+<dd><p>Return the empty-array constructor for the given backend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Backend to use. Supported backends are ‘numpy’, ‘jax’, and ‘cupy’.</p>
+<dd class="field-odd"><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>f</strong> – Function that performs empty either from
-<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.empty.html#numpy.empty" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.empty</span></code></a> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">jax.numpy.empty</span></code> or
-<code class="xref py py-obj docutils literal notranslate"><span class="pre">cupy.empty</span></code></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#callable" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callable</span></code></a></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.14)"><em>Callable</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -223,18 +193,13 @@ which return the correct callable for the requested backend.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="tensorrsvd.backends.get_zeros">
 <span class="sig-prename descclassname"><span class="pre">tensorrsvd.backends.</span></span><span class="sig-name descname"><span class="pre">get_zeros</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/backends.html#get_zeros"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.backends.get_zeros" title="Link to this definition"></a></dt>
-<dd><p>Returns correct zeros module for the given backend.</p>
+<dd><p>Return the zeros-array constructor for the given backend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Backend to use. Supported backends are ‘numpy’, ‘jax’, and ‘cupy’.</p>
+<dd class="field-odd"><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>f</strong> – Function that performs zeros either from
-<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.zeros.html#numpy.zeros" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.zeros</span></code></a> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">jax.numpy.zeros</span></code> or
-<code class="xref py py-obj docutils literal notranslate"><span class="pre">cupy.zeros</span></code></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#callable" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callable</span></code></a></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.14)"><em>Callable</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -243,18 +208,13 @@ which return the correct callable for the requested backend.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="tensorrsvd.backends.get_conj">
 <span class="sig-prename descclassname"><span class="pre">tensorrsvd.backends.</span></span><span class="sig-name descname"><span class="pre">get_conj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/backends.html#get_conj"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.backends.get_conj" title="Link to this definition"></a></dt>
-<dd><p>Returns correct conj module for the given backend.</p>
+<dd><p>Return the complex-conjugate function for the given backend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Backend to use. Supported backends are ‘numpy’, ‘jax’, and ‘cupy’.</p>
+<dd class="field-odd"><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>f</strong> – Function that performs conjugation either from
-<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.conj.html#numpy.conj" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.conj</span></code></a> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">jax.numpy.conj</span></code> or
-<code class="xref py py-obj docutils literal notranslate"><span class="pre">cupy.conj</span></code></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#callable" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callable</span></code></a></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.14)"><em>Callable</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -262,18 +222,13 @@ which return the correct callable for the requested backend.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="tensorrsvd.backends.get_ravel">
 <span class="sig-prename descclassname"><span class="pre">tensorrsvd.backends.</span></span><span class="sig-name descname"><span class="pre">get_ravel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/backends.html#get_ravel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.backends.get_ravel" title="Link to this definition"></a></dt>
-<dd><p>Returns correct ravel module for the given backend.</p>
+<dd><p>Return the ravel function for the given backend.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Backend to use. Supported backends are ‘numpy’, ‘jax’, and ‘cupy’.</p>
+<dd class="field-odd"><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>)</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>f</strong> – Function that performs ravel either from
-<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ravel.html#numpy.ravel" title="(in NumPy v2.4)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">numpy.ravel</span></code></a> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">jax.numpy.ravel</span></code> or
-<code class="xref py py-obj docutils literal notranslate"><span class="pre">cupy.ravel</span></code></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#callable" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">callable</span></code></a></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Callable" title="(in Python v3.14)"><em>Callable</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -282,16 +237,13 @@ which return the correct callable for the requested backend.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="tensorrsvd.backends.is_complex">
 <span class="sig-prename descclassname"><span class="pre">tensorrsvd.backends.</span></span><span class="sig-name descname"><span class="pre">is_complex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dtype_like</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/backends.html#is_complex"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.backends.is_complex" title="Link to this definition"></a></dt>
-<dd><p>Returns True if the given dtype is a complex dtype, False otherwise.</p>
+<dd><p>Return True if dtype_like is a complex dtype.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dtype_like</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">npt.DTypeLike</span></code>) – The dtype to check.</p>
+<dd class="field-odd"><p><strong>dtype_like</strong> (<em>DTypeLike</em>)</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>is_complex</strong> – True if the given dtype is a complex dtype, False otherwise.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -299,17 +251,13 @@ which return the correct callable for the requested backend.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="tensorrsvd.backends.real_dtype">
 <span class="sig-prename descclassname"><span class="pre">tensorrsvd.backends.</span></span><span class="sig-name descname"><span class="pre">real_dtype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dtype_like</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/backends.html#real_dtype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.backends.real_dtype" title="Link to this definition"></a></dt>
-<dd><p>Returns the real dtype corresponding to the given dtype.</p>
-<p>If the given dtype is a complex dtype, returns the corresponding real dtype. Otherwise, returns the given dtype.</p>
+<dd><p>Return the real counterpart of dtype_like (unchanged if already real).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>dtype_like</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">npt.DTypeLike</span></code>) – The dtype to convert.</p>
+<dd class="field-odd"><p><strong>dtype_like</strong> (<em>DTypeLike</em>)</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>real_dtype</strong> – The real dtype corresponding to the given dtype.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">np.dtype</span></code></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.dtype.html#numpy.dtype" title="(in NumPy v2.4)"><em>dtype</em></a></p>
 </dd>
 </dl>
 </dd></dl>

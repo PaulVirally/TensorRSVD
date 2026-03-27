@@ -87,13 +87,13 @@ to hold in memory. The library supports three array backends: NumPy (default),
 JAX, and CuPy. See <a class="reference internal" href="backends.html"><span class="doc">Backends</span></a> for details.</p>
 <p><strong>Quick start</strong></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">tensorrsvd</span><span class="w"> </span><span class="kn">import</span> <span class="n">ho_svd_r</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tensorrsvd</span><span class="w"> </span><span class="kn">import</span> <span class="n">ho_rsvd</span>
 
 <span class="c1"># Tensor defined as a callable: T(x0, x1, x2) = x0 - x1 + x2</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">my_tensor</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">x0</span> <span class="o">-</span> <span class="n">x1</span> <span class="o">+</span> <span class="n">x2</span>
 
-<span class="n">U_list</span><span class="p">,</span> <span class="n">S_list</span> <span class="o">=</span> <span class="n">ho_svd_r</span><span class="p">(</span>
+<span class="n">U_list</span><span class="p">,</span> <span class="n">S_list</span> <span class="o">=</span> <span class="n">ho_rsvd</span><span class="p">(</span>
     <span class="n">tensor</span><span class="o">=</span><span class="n">my_tensor</span><span class="p">,</span>
     <span class="n">tensor_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span>
     <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
@@ -120,7 +120,7 @@ the <a class="reference internal" href="user_guide.html"><span class="doc">User 
 </li>
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="user_guide.html#defining-a-tensor-as-a-callable">Defining a Tensor as a Callable</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user_guide.html#running-ho-svd-r">Running <code class="docutils literal notranslate"><span class="pre">ho_svd_r</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#running-ho-rsvd">Running <code class="docutils literal notranslate"><span class="pre">ho_rsvd</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="user_guide.html#interpreting-the-output">Interpreting the Output</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user_guide.html#reconstructing-the-tensor">Reconstructing the Tensor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user_guide.html#switching-backends">Switching Backends</a></li>
@@ -136,7 +136,7 @@ the <a class="reference internal" href="user_guide.html"><span class="doc">User 
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api_reference.html">Public API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api_reference.html#tensorrsvd.ho_svd_r"><code class="docutils literal notranslate"><span class="pre">ho_svd_r()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#tensorrsvd.ho_rsvd"><code class="docutils literal notranslate"><span class="pre">ho_rsvd()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="core.html">Core Internals</a><ul>

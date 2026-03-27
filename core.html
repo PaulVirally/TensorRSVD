@@ -91,7 +91,7 @@
   <section id="core-internals">
 <h1>Core Internals<a class="headerlink" href="#core-internals" title="Link to this heading"></a></h1>
 <p>These modules implement the two algorithmic building blocks that power
-<a class="reference internal" href="api_reference.html#tensorrsvd.ho_svd_r" title="tensorrsvd.ho_svd_r"><code class="xref py py-func docutils literal notranslate"><span class="pre">tensorrsvd.ho_svd_r()</span></code></a>. They are not part of the public API but are
+<a class="reference internal" href="api_reference.html#tensorrsvd.ho_rsvd" title="tensorrsvd.ho_rsvd"><code class="xref py py-func docutils literal notranslate"><span class="pre">tensorrsvd.ho_rsvd()</span></code></a>. They are not part of the public API but are
 documented here for contributors and anyone who wants to use the primitives
 directly.</p>
 <p>For the mathematical description of both components see
@@ -152,20 +152,19 @@ singular values and left singular vectors via a small dense SVD.</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="tensorrsvd.core.rsvd.randomized_range_finder">
 <span class="sig-prename descclassname"><span class="pre">tensorrsvd.core.rsvd.</span></span><span class="sig-name descname"><span class="pre">randomized_range_finder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_oversamples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_power_iterations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/core/rsvd.html#randomized_range_finder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.core.rsvd.randomized_range_finder" title="Link to this definition"></a></dt>
-<dd><p>Compute an orthonormal matrix Q whose range approximates the range of op, i.e., “math:<cite>op approx Q Q^dagger op</cite></p>
+<dd><p>Compute an orthonormal matrix Q whose range approximates the range of op, i.e., <span class="math notranslate nohighlight">\(op \approx Q Q^\dagger op\)</span></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>op</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">LinearOperator</span></code>) – The linear operator for which to find the range.</p></li>
 <li><p><strong>rank</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Target rank for the approximation.</p></li>
 <li><p><strong>num_oversamples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Number of additional random vectors to sample (beyond the target rank) to improve accuracy.</p></li>
-<li><p><strong>num_power_iterations</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Number of power iterations to perform to improve the approximation of the range. Each iteration involves multiplying by op and its adjoint, which can help capture the dominant singular vectors more accurately, especially when the singular values decay slowly.</p></li>
-<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Backend to use for computations. Supported backends are ‘numpy’, ‘jax’,
-and ‘cupy’.</p></li>
+<li><p><strong>num_power_iterations</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Number of power iterations for improved accuracy.</p></li>
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Backend to use: ‘numpy’, ‘jax’, or ‘cupy’.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>Q</strong> – Orthonormal matrix of shape (m, rank) whose range approximates the range of op, where m is the number of rows of op.</p>
+<dd class="field-even"><p><strong>Q</strong> – Orthonormal matrix of shape (m, rank + num_oversamples) whose range approximates the range of op, where m is the number of rows of op.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayLike</span></code></p>
@@ -186,9 +185,8 @@ and ‘cupy’.</p></li>
 <li><p><strong>op</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">LinearOperator</span></code>) – The linear operator to decompose.</p></li>
 <li><p><strong>rank</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Target rank for the approximation.</p></li>
 <li><p><strong>num_oversamples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Number of additional random vectors to sample (beyond the target rank) to improve accuracy.</p></li>
-<li><p><strong>num_power_iterations</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Number of power iterations to perform to improve the approximation of the range. Each iteration involves multiplying by op and its adjoint, which can help capture the dominant singular vectors more accurately, especially when the singular values decay slowly.</p></li>
-<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Backend to use for computations. Supported backends are ‘numpy’, ‘jax’,
-and ‘cupy’.</p></li>
+<li><p><strong>num_power_iterations</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) – Number of power iterations for improved accuracy.</p></li>
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Backend to use: ‘numpy’, ‘jax’, or ‘cupy’.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>

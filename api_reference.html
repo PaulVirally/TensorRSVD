@@ -48,7 +48,7 @@
 <li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="theory.html">Mathematical Background</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Public API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#tensorrsvd.ho_svd_r"><code class="docutils literal notranslate"><span class="pre">ho_svd_r()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tensorrsvd.ho_rsvd"><code class="docutils literal notranslate"><span class="pre">ho_rsvd()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="core.html">Core Internals</a></li>
@@ -87,8 +87,8 @@ under <code class="docutils literal notranslate"><span class="pre">tensorrsvd.co
 <p>For a practical walkthrough see the <a class="reference internal" href="user_guide.html"><span class="doc">User Guide</span></a>. For the
 mathematical foundations see <a class="reference internal" href="theory.html"><span class="doc">Theory</span></a>.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="tensorrsvd.ho_svd_r">
-<span class="sig-prename descclassname"><span class="pre">tensorrsvd.</span></span><span class="sig-name descname"><span class="pre">ho_svd_r</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_oversamples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_power_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_idxs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'numpy'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/api.html#ho_svd_r"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.ho_svd_r" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="tensorrsvd.ho_rsvd">
+<span class="sig-prename descclassname"><span class="pre">tensorrsvd.</span></span><span class="sig-name descname"><span class="pre">ho_rsvd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_oversamples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_power_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_idxs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'numpy'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/api.html#ho_rsvd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.ho_rsvd" title="Link to this definition"></a></dt>
 <dd><p>Compute the randomized higher-order SVD (HOSVD) of a tensor represented by a callable function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -96,37 +96,13 @@ mathematical foundations see <a class="reference internal" href="theory.html"><s
 <li><p><strong>tensor</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>) – Vectorized callable accepting k array arguments (coordinates in [0, 1])
 and returning the tensor values at those coordinates. Must be
 JAX-traceable if backend == ‘jax’.</p></li>
-<li><p><strong>tensor_shape</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a> of <code class="xref py py-class docutils literal notranslate"><span class="pre">ints</span></code>) – Shape of the tensor to decompose. This is required because the tensor is
-represented as a callable function that takes in coordinates and returns
-the tensor value at those coordinates, so we need to know the shape of
-the tensor to perform the decomposition.</p></li>
-<li><p><strong>dtype</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">DTypeLike</span></code>) – The data type of the tensor values. This is used to determine the data
-type of the random vectors sampled for the randomized SVD computations.</p></li>
-<li><p><strong>rank</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayLike</span></code>) – Target rank(s) for the approximation. If an integer is provided, the
-same rank will be used for all modes. If an array-like of integers is
-provided, it should have the same length as num_idxs and specify the
-rank for each mode.</p></li>
-<li><p><strong>num_oversamples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayLike</span></code>, <em>optional</em>) – Number of additional random vectors to sample (beyond the target rank)
-to improve accuracy. If an integer is provided, the same number of
-oversamples will be used for all modes. If an array-like of integers is
-provided, it should have the same length as num_idxs and specify the
-number of oversamples for each mode. Default is 10.</p></li>
-<li><p><strong>num_power_iterations</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayLike</span></code>, <em>optional</em>) – Number of power iterations to perform to improve the approximation of
-the range. Each iteration involves multiplying by the tensor and its
-adjoint, which can help capture the dominant singular vectors more
-accurately, especially when the singular values decay slowly. If an
-integer is provided, the same number of power iterations will be used
-for all modes. If an array-like of integers is provided, it should have
-the same length as num_idxs and specify the number of power iterations
-for each mode. Default is 0.</p></li>
-<li><p><strong>num_idxs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>optional</em>) – Number of modes to decompose. This is required if rank, num_oversamples,
-or num_power_iterations are provided as integers, because the function
-needs to know how many modes to decompose. If rank, num_oversamples, and
-num_power_iterations are all provided as array-like with the same
-length, then num_idxs can be inferred and does not need to be provided
-explicitly.</p></li>
-<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Backend to use for computations. Supported backends are ‘numpy’, ‘jax’,
-and ‘cupy’. Default is ‘numpy’.</p></li>
+<li><p><strong>tensor_shape</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a> of <code class="xref py py-class docutils literal notranslate"><span class="pre">ints</span></code>) – Shape of the tensor (n_0, …, n_{k-1}).</p></li>
+<li><p><strong>dtype</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">DTypeLike</span></code>) – Numeric dtype for computations.</p></li>
+<li><p><strong>rank</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayLike</span></code>) – Target rank(s) for the approximation. Broadcast to all modes if scalar.</p></li>
+<li><p><strong>num_oversamples</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayLike</span></code>, <em>optional</em>) – Extra random vectors beyond rank for improved accuracy. Default is 10.</p></li>
+<li><p><strong>num_power_iterations</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> or <code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayLike</span></code>, <em>optional</em>) – Number of power iterations for improved accuracy. Default is 0.</p></li>
+<li><p><strong>num_idxs</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <em>optional</em>) – Number of modes; inferred from array-like params if omitted.</p></li>
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Backend to use for computations: ‘numpy’, ‘jax’, or ‘cupy’. Default is ‘numpy’.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -145,10 +121,10 @@ and ‘cupy’. Default is ‘numpy’.</p></li>
 <p class="rubric">Examples</p>
 <p>Decompose a simple 3-D linear tensor into Tucker factors:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">tensorrsvd</span><span class="w"> </span><span class="kn">import</span> <span class="n">ho_svd_r</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">tensorrsvd</span><span class="w"> </span><span class="kn">import</span> <span class="n">ho_rsvd</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">my_tensor</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">return</span> <span class="n">x0</span> <span class="o">-</span> <span class="n">x1</span> <span class="o">+</span> <span class="n">x2</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">U_list</span><span class="p">,</span> <span class="n">S_list</span> <span class="o">=</span> <span class="n">ho_svd_r</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">U_list</span><span class="p">,</span> <span class="n">S_list</span> <span class="o">=</span> <span class="n">ho_rsvd</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">tensor</span><span class="o">=</span><span class="n">my_tensor</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">tensor_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>

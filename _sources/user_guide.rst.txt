@@ -63,21 +63,21 @@ as its inputs.
 
 .. _user-guide-running:
 
-Running ``ho_svd_r``
+Running ``ho_rsvd``
 ---------------------
 
-The single public entry point is :func:`tensorrsvd.ho_svd_r`. A minimal call
+The single public entry point is :func:`tensorrsvd.ho_rsvd`. A minimal call
 looks like this:
 
 .. code-block:: python
 
    import numpy as np
-   from tensorrsvd import ho_svd_r
+   from tensorrsvd import ho_rsvd
 
    def my_tensor(x0, x1, x2):
        return x0 - x1 + x2
 
-   U_list, S_list = ho_svd_r(
+   U_list, S_list = ho_rsvd(
        tensor=my_tensor,
        tensor_shape=(32, 32, 32),
        dtype=np.float64,
@@ -122,7 +122,7 @@ looks like this:
 Interpreting the Output
 ------------------------
 
-:func:`~tensorrsvd.ho_svd_r` returns a pair ``(U_list, S_list)``:
+:func:`~tensorrsvd.ho_rsvd` returns a pair ``(U_list, S_list)``:
 
 ``U_list``
    A list of :math:`k` factor matrices. ``U_list[m]`` has shape
@@ -159,7 +159,7 @@ well approximated at the chosen rank.
 Reconstructing the Tensor
 --------------------------
 
-:func:`~tensorrsvd.ho_svd_r` returns the factor matrices but not the
+:func:`~tensorrsvd.ho_rsvd` returns the factor matrices but not the
 core tensor :math:`\mathcal{G}`. To reconstruct a dense approximation,
 you need to:
 
@@ -207,7 +207,7 @@ Switching Backends
 -------------------
 
 Pass ``backend="numpy"`` (default), ``"jax"``, or ``"cupy"`` to
-:func:`~tensorrsvd.ho_svd_r`:
+:func:`~tensorrsvd.ho_rsvd`:
 
 .. list-table::
    :header-rows: 1
@@ -232,12 +232,12 @@ Pass ``backend="numpy"`` (default), ``"jax"``, or ``"cupy"`` to
 .. code-block:: python
 
    import jax.numpy as jnp
-   from tensorrsvd import ho_svd_r
+   from tensorrsvd import ho_rsvd
 
    def gaussian_jax(x0, x1, x2):
        return jnp.exp(-(x0**2 + x1**2 + x2**2))
 
-   U_list, S_list = ho_svd_r(
+   U_list, S_list = ho_rsvd(
        tensor=gaussian_jax,
        tensor_shape=(64, 64, 64),
        dtype=jnp.float32,

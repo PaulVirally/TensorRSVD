@@ -111,35 +111,35 @@
     <span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_dispatch</span><span class="p">(</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">numpy_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">jax_fn</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">cupy_fn</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;jax&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;JAX is not available. Please install JAX.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">jax_fn</span>  <span class="c1"># type: ignore[return-value]</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;cupy&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;CuPy is not available. Please install CuPy.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cupy_fn</span>  <span class="c1"># type: ignore[return-value]</span>
+    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;numpy&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">numpy_fn</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported backend: </span><span class="si">{</span><span class="n">backend</span><span class="si">!r}</span><span class="s2">. Supported: &#39;numpy&#39;, &#39;jax&#39;, &#39;cupy&#39;.&quot;</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="get_qr">
 <a class="viewcode-back" href="../../backends.html#tensorrsvd.backends.get_qr">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_qr</span><span class="p">(</span><span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns correct qr module for the given backend.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    backend : str</span>
-<span class="sd">        Backend to use. Supported backends are &#39;numpy&#39;, &#39;jax&#39;, and &#39;cupy&#39;.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    f : :obj:`callable`</span>
-<span class="sd">        Function that performs QR decomposition either from</span>
-<span class="sd">        :obj:`numpy.linalg.qr` or :obj:`jax.numpy.linalg.qr` or</span>
-<span class="sd">        :obj:`cupy.linalg.qr`</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;jax&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;JAX is not available. Please install JAX to use this backend.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span>
-    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;cupy&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;CuPy is not available. Please install CuPy to use this backend.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">cp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span>
-    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;numpy&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Unsupported backend: </span><span class="si">{</span><span class="n">backend</span><span class="si">}</span><span class="s2">. Supported backends are &#39;numpy&#39;, &#39;jax&#39;, and &#39;cupy&#39;.&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the QR decomposition function for the given backend.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_dispatch</span><span class="p">(</span>
+        <span class="n">backend</span><span class="p">,</span>
+        <span class="n">numpy_fn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">,</span>
+        <span class="n">jax_fn</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span> <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cupy_fn</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span> <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
@@ -147,32 +147,14 @@
 <div class="viewcode-block" id="get_svd">
 <a class="viewcode-back" href="../../backends.html#tensorrsvd.backends.get_svd">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_svd</span><span class="p">(</span><span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns correct svd module for the given backend.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    backend : str</span>
-<span class="sd">        Backend to use. Supported backends are &#39;numpy&#39;, &#39;jax&#39;, and &#39;cupy&#39;.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    f : :obj:`callable`</span>
-<span class="sd">        Function that performs SVD either from</span>
-<span class="sd">        :obj:`numpy.linalg.svd` or :obj:`jax.numpy.linalg.svd` or</span>
-<span class="sd">        :obj:`cupy.linalg.svd`</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;jax&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;JAX is not available. Please install JAX to use this backend.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="k">lambda</span> <span class="n">mat</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;cupy&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;CuPy is not available. Please install CuPy to use this backend.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="k">lambda</span> <span class="n">mat</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;numpy&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="k">lambda</span> <span class="n">mat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Unsupported backend: </span><span class="si">{</span><span class="n">backend</span><span class="si">}</span><span class="s2">. Supported backends are &#39;numpy&#39;, &#39;jax&#39;, and &#39;cupy&#39;.&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a full_matrices=False SVD function for the given backend.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_dispatch</span><span class="p">(</span>
+        <span class="n">backend</span><span class="p">,</span>
+        <span class="n">numpy_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">mat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+        <span class="n">jax_fn</span><span class="o">=</span><span class="p">(</span><span class="k">lambda</span> <span class="n">mat</span><span class="p">:</span> <span class="n">jnp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span> <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cupy_fn</span><span class="o">=</span><span class="p">(</span><span class="k">lambda</span> <span class="n">mat</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span>
+        <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
@@ -180,41 +162,24 @@
 <div class="viewcode-block" id="get_normal">
 <a class="viewcode-back" href="../../backends.html#tensorrsvd.backends.get_normal">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_normal</span><span class="p">(</span><span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns correct normal module for the given backend.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    backend : str</span>
-<span class="sd">        Backend to use. Supported backends are &#39;numpy&#39;, &#39;jax&#39;, and &#39;cupy&#39;.</span>
-
-<span class="sd">    seed : int</span>
-<span class="sd">        Random seed to use for normal distribution sampling.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    f : :obj:`callable`</span>
-<span class="sd">        Function that performs normal distribution sampling either from</span>
-<span class="sd">        :obj:`numpy.random.normal` or :obj:`jax.random.normal` or</span>
-<span class="sd">        :obj:`cupy.random.normal`</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;jax&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;JAX is not available. Please install JAX to use this backend.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="k">lambda</span> <span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span>
-            <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">key</span><span class="p">(</span><span class="n">seed</span><span class="p">),</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span>
-        <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;cupy&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;CuPy is not available. Please install CuPy to use this backend.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="k">lambda</span> <span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a standard-normal sampling function for the given backend.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_dispatch</span><span class="p">(</span>
+        <span class="n">backend</span><span class="p">,</span>
+        <span class="n">numpy_fn</span><span class="o">=</span><span class="k">lambda</span> <span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span>
             <span class="n">size</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span>
+        <span class="p">),</span>
+        <span class="n">jax_fn</span><span class="o">=</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">jax</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">key</span><span class="p">(</span><span class="n">seed</span><span class="p">),</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
         <span class="p">)</span>
-    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;numpy&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="k">lambda</span> <span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span>
-            <span class="n">size</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span>
+        <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span>
+        <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cupy_fn</span><span class="o">=</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">cp</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span>
+                <span class="n">size</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span>
+            <span class="p">)</span>
         <span class="p">)</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Unsupported backend: </span><span class="si">{</span><span class="n">backend</span><span class="si">}</span><span class="s2">. Supported backends are &#39;numpy&#39;, &#39;jax&#39;, and &#39;cupy&#39;.&quot;</span>
+        <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span>
+        <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
@@ -222,32 +187,12 @@
 <div class="viewcode-block" id="get_arange">
 <a class="viewcode-back" href="../../backends.html#tensorrsvd.backends.get_arange">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_arange</span><span class="p">(</span><span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns correct arange module for the given backend.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    backend : str</span>
-<span class="sd">        Backend to use. Supported backends are &#39;numpy&#39;, &#39;jax&#39;, and &#39;cupy&#39;.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    f : :obj:`callable`</span>
-<span class="sd">        Function that performs arange either from</span>
-<span class="sd">        :obj:`numpy.arange` or :obj:`jax.numpy.arange` or</span>
-<span class="sd">        :obj:`cupy.arange`</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;jax&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;JAX is not available. Please install JAX to use this backend.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">arange</span>
-    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;cupy&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;CuPy is not available. Please install CuPy to use this backend.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">cp</span><span class="o">.</span><span class="n">arange</span>
-    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;numpy&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Unsupported backend: </span><span class="si">{</span><span class="n">backend</span><span class="si">}</span><span class="s2">. Supported backends are &#39;numpy&#39;, &#39;jax&#39;, and &#39;cupy&#39;.&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the arange function for the given backend.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_dispatch</span><span class="p">(</span>
+        <span class="n">backend</span><span class="p">,</span>
+        <span class="n">numpy_fn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">,</span>
+        <span class="n">jax_fn</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">arange</span> <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cupy_fn</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">arange</span> <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
@@ -255,32 +200,12 @@
 <div class="viewcode-block" id="get_meshgrid">
 <a class="viewcode-back" href="../../backends.html#tensorrsvd.backends.get_meshgrid">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_meshgrid</span><span class="p">(</span><span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns correct meshgrid module for the given backend.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    backend : str</span>
-<span class="sd">        Backend to use. Supported backends are &#39;numpy&#39;, &#39;jax&#39;, and &#39;cupy&#39;.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    f : :obj:`callable`</span>
-<span class="sd">        Function that performs meshgrid either from</span>
-<span class="sd">        :obj:`numpy.meshgrid` or :obj:`jax.numpy.meshgrid` or</span>
-<span class="sd">        :obj:`cupy.meshgrid`</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;jax&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;JAX is not available. Please install JAX to use this backend.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">meshgrid</span>
-    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;cupy&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;CuPy is not available. Please install CuPy to use this backend.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">cp</span><span class="o">.</span><span class="n">meshgrid</span>
-    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;numpy&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Unsupported backend: </span><span class="si">{</span><span class="n">backend</span><span class="si">}</span><span class="s2">. Supported backends are &#39;numpy&#39;, &#39;jax&#39;, and &#39;cupy&#39;.&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the meshgrid function for the given backend.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_dispatch</span><span class="p">(</span>
+        <span class="n">backend</span><span class="p">,</span>
+        <span class="n">numpy_fn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">,</span>
+        <span class="n">jax_fn</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">meshgrid</span> <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cupy_fn</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">meshgrid</span> <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
@@ -288,32 +213,12 @@
 <div class="viewcode-block" id="get_empty">
 <a class="viewcode-back" href="../../backends.html#tensorrsvd.backends.get_empty">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_empty</span><span class="p">(</span><span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns correct empty module for the given backend.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    backend : str</span>
-<span class="sd">        Backend to use. Supported backends are &#39;numpy&#39;, &#39;jax&#39;, and &#39;cupy&#39;.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    f : :obj:`callable`</span>
-<span class="sd">        Function that performs empty either from</span>
-<span class="sd">        :obj:`numpy.empty` or :obj:`jax.numpy.empty` or</span>
-<span class="sd">        :obj:`cupy.empty`</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;jax&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;JAX is not available. Please install JAX to use this backend.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">empty</span>
-    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;cupy&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;CuPy is not available. Please install CuPy to use this backend.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">cp</span><span class="o">.</span><span class="n">empty</span>
-    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;numpy&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Unsupported backend: </span><span class="si">{</span><span class="n">backend</span><span class="si">}</span><span class="s2">. Supported backends are &#39;numpy&#39;, &#39;jax&#39;, and &#39;cupy&#39;.&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the empty-array constructor for the given backend.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_dispatch</span><span class="p">(</span>
+        <span class="n">backend</span><span class="p">,</span>
+        <span class="n">numpy_fn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">,</span>
+        <span class="n">jax_fn</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">empty</span> <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cupy_fn</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">empty</span> <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
@@ -321,32 +226,12 @@
 <div class="viewcode-block" id="get_zeros">
 <a class="viewcode-back" href="../../backends.html#tensorrsvd.backends.get_zeros">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_zeros</span><span class="p">(</span><span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns correct zeros module for the given backend.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    backend : str</span>
-<span class="sd">        Backend to use. Supported backends are &#39;numpy&#39;, &#39;jax&#39;, and &#39;cupy&#39;.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    f : :obj:`callable`</span>
-<span class="sd">        Function that performs zeros either from</span>
-<span class="sd">        :obj:`numpy.zeros` or :obj:`jax.numpy.zeros` or</span>
-<span class="sd">        :obj:`cupy.zeros`</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;jax&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;JAX is not available. Please install JAX to use this backend.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span>
-    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;cupy&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;CuPy is not available. Please install CuPy to use this backend.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">cp</span><span class="o">.</span><span class="n">zeros</span>
-    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;numpy&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Unsupported backend: </span><span class="si">{</span><span class="n">backend</span><span class="si">}</span><span class="s2">. Supported backends are &#39;numpy&#39;, &#39;jax&#39;, and &#39;cupy&#39;.&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the zeros-array constructor for the given backend.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_dispatch</span><span class="p">(</span>
+        <span class="n">backend</span><span class="p">,</span>
+        <span class="n">numpy_fn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">,</span>
+        <span class="n">jax_fn</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">zeros</span> <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cupy_fn</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">zeros</span> <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
@@ -354,32 +239,12 @@
 <div class="viewcode-block" id="get_conj">
 <a class="viewcode-back" href="../../backends.html#tensorrsvd.backends.get_conj">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_conj</span><span class="p">(</span><span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns correct conj module for the given backend.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    backend : str</span>
-<span class="sd">        Backend to use. Supported backends are &#39;numpy&#39;, &#39;jax&#39;, and &#39;cupy&#39;.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    f : :obj:`callable`</span>
-<span class="sd">        Function that performs conjugation either from</span>
-<span class="sd">        :obj:`numpy.conj` or :obj:`jax.numpy.conj` or</span>
-<span class="sd">        :obj:`cupy.conj`</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;jax&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;JAX is not available. Please install JAX to use this backend.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">conj</span>
-    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;cupy&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;CuPy is not available. Please install CuPy to use this backend.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">cp</span><span class="o">.</span><span class="n">conj</span>
-    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;numpy&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Unsupported backend: </span><span class="si">{</span><span class="n">backend</span><span class="si">}</span><span class="s2">. Supported backends are &#39;numpy&#39;, &#39;jax&#39;, and &#39;cupy&#39;.&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the complex-conjugate function for the given backend.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_dispatch</span><span class="p">(</span>
+        <span class="n">backend</span><span class="p">,</span>
+        <span class="n">numpy_fn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">,</span>
+        <span class="n">jax_fn</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">conj</span> <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cupy_fn</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">conj</span> <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
@@ -387,32 +252,12 @@
 <div class="viewcode-block" id="get_ravel">
 <a class="viewcode-back" href="../../backends.html#tensorrsvd.backends.get_ravel">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_ravel</span><span class="p">(</span><span class="n">backend</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns correct ravel module for the given backend.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    backend : str</span>
-<span class="sd">        Backend to use. Supported backends are &#39;numpy&#39;, &#39;jax&#39;, and &#39;cupy&#39;.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    f : :obj:`callable`</span>
-<span class="sd">        Function that performs ravel either from</span>
-<span class="sd">        :obj:`numpy.ravel` or :obj:`jax.numpy.ravel` or</span>
-<span class="sd">        :obj:`cupy.ravel`</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;jax&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;JAX is not available. Please install JAX to use this backend.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ravel</span>
-    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;cupy&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;CuPy is not available. Please install CuPy to use this backend.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">cp</span><span class="o">.</span><span class="n">ravel</span>
-    <span class="k">elif</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;numpy&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Unsupported backend: </span><span class="si">{</span><span class="n">backend</span><span class="si">}</span><span class="s2">. Supported backends are &#39;numpy&#39;, &#39;jax&#39;, and &#39;cupy&#39;.&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the ravel function for the given backend.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_dispatch</span><span class="p">(</span>
+        <span class="n">backend</span><span class="p">,</span>
+        <span class="n">numpy_fn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ravel</span><span class="p">,</span>
+        <span class="n">jax_fn</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">ravel</span> <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cupy_fn</span><span class="o">=</span><span class="n">cp</span><span class="o">.</span><span class="n">ravel</span> <span class="k">if</span> <span class="n">deps</span><span class="o">.</span><span class="n">cupy_enabled</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
@@ -420,18 +265,7 @@
 <div class="viewcode-block" id="is_complex">
 <a class="viewcode-back" href="../../backends.html#tensorrsvd.backends.is_complex">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">is_complex</span><span class="p">(</span><span class="n">dtype_like</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">DTypeLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns True if the given dtype is a complex dtype, False otherwise.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    dtype_like : npt.DTypeLike</span>
-<span class="sd">        The dtype to check.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    is_complex : bool</span>
-<span class="sd">        True if the given dtype is a complex dtype, False otherwise.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True if dtype_like is a complex dtype.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype_like</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">complexfloating</span><span class="p">)</span></div>
 
 
@@ -439,20 +273,7 @@
 <div class="viewcode-block" id="real_dtype">
 <a class="viewcode-back" href="../../backends.html#tensorrsvd.backends.real_dtype">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">real_dtype</span><span class="p">(</span><span class="n">dtype_like</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">DTypeLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the real dtype corresponding to the given dtype.</span>
-
-<span class="sd">    If the given dtype is a complex dtype, returns the corresponding real dtype. Otherwise, returns the given dtype.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    dtype_like : npt.DTypeLike</span>
-<span class="sd">        The dtype to convert.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    real_dtype : np.dtype</span>
-<span class="sd">        The real dtype corresponding to the given dtype.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the real counterpart of dtype_like (unchanged if already real).&quot;&quot;&quot;</span>
     <span class="n">dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype_like</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">complexfloating</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span><span class="o">.</span><span class="n">dtype</span>
