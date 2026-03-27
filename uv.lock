@@ -128,6 +128,24 @@ wheels = [
 ]
 
 [[package]]
+name = "cuda-pathfinder"
+version = "1.5.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/93/66/0c02bd330e7d976f83fa68583d6198d76f23581bcbb5c0e98a6148f326e5/cuda_pathfinder-1.5.0-py3-none-any.whl", hash = "sha256:498f90a9e9de36044a7924742aecce11c50c49f735f1bc53e05aa46de9ea4110", size = 49739, upload-time = "2026-03-24T21:14:30.869Z" },
+]
+
+[[package]]
+name = "cupy"
+version = "14.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cuda-pathfinder" },
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/18/3c/d3aa4aaf179567f6588dbfb18b29471949fb782fc79fddfd43480b052d71/cupy-14.0.1.tar.gz", hash = "sha256:4b673ab2d8b2329abe7ae0a7ae6159656044a8eecca56cf0b834b7c907063205", size = 3899909, upload-time = "2026-02-20T10:25:27.585Z" }
+
+[[package]]
 name = "decorator"
 version = "5.2.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1170,6 +1188,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+cupy = [
+    { name = "cupy" },
+]
 jax = [
     { name = "jax" },
 ]
@@ -1193,13 +1214,14 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cupy", marker = "extra == 'cupy'", specifier = ">=12.0.0" },
     { name = "jax", marker = "extra == 'jax'", specifier = ">=0.9.0.1" },
     { name = "jax", extras = ["cuda12"], marker = "extra == 'jaxcuda12'", specifier = ">=0.9.0.1" },
     { name = "jax", extras = ["cuda13"], marker = "extra == 'jaxcuda13'", specifier = ">=0.9.0.1" },
     { name = "numpy", specifier = ">=2.4.2" },
     { name = "pylops", specifier = ">=2.6.0" },
 ]
-provides-extras = ["jax", "jaxcuda12", "jaxcuda13"]
+provides-extras = ["jax", "jaxcuda12", "jaxcuda13", "cupy"]
 
 [package.metadata.requires-dev]
 dev = [

@@ -12,6 +12,7 @@ keywords = ["tensor", "tucker", "randomized svd", "hosvd", "scientific computing
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Mathematics",
@@ -36,6 +37,7 @@ build-backend = "uv_build"
 jax = ["jax>=0.9.0.1"]
 jaxcuda12 = ["jax[cuda12]>=0.9.0.1"]
 jaxcuda13 = ["jax[cuda13]>=0.9.0.1"]
+cupy = ["cupy>=12.0.0"]
 
 [dependency-groups]
 dev = [

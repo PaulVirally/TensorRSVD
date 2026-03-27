@@ -25,10 +25,12 @@ pip install tensorrsvd
 pip install "tensorrsvd[jax]"          # JAX (CPU / GPU / TPU)
 pip install "tensorrsvd[jaxcuda12]"    # JAX with CUDA 12
 pip install "tensorrsvd[jaxcuda13]"    # JAX with CUDA 13
+pip install "tensorrsvd[cupy]"         # CuPy (NVIDIA GPU, CUDA required)
 ```
 
-CuPy (NVIDIA GPU) must be installed separately following the
-[CuPy installation guide](https://docs.cupy.dev/en/stable/install.html).
+> **Note:** CuPy wheels are CUDA-version-specific. If the above does not match your
+> CUDA installation, install CuPy manually following the
+> [CuPy installation guide](https://docs.cupy.dev/en/stable/install.html).
 
 ## Quick start
 

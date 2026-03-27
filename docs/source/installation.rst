@@ -45,9 +45,18 @@ for additional platform-specific instructions.
 **CuPy** (NVIDIA GPU only)
 
 CuPy offloads all linear-algebra primitives to a CUDA device and is required
-for the ``backend="cupy"`` option. Install it following the
-`CuPy installation guide <https://docs.cupy.dev/en/stable/install.html>`_,
-choosing the wheel that matches your CUDA version.
+for the ``backend="cupy"`` option.
+
+.. code-block:: bash
+
+   pip install "tensorrsvd[cupy]"
+
+.. note::
+
+   CuPy wheels are CUDA-version-specific. If the above does not match your
+   CUDA installation, install CuPy manually following the
+   `CuPy installation guide <https://docs.cupy.dev/en/stable/install.html>`_
+   and choose the wheel that matches your CUDA version.
 
 Verifying the installation
 --------------------------
