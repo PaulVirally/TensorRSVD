@@ -136,18 +136,14 @@ class MatricizedTensorOperator(pylops.LinearOperator):
         return Y
 
     def _rmatmat(self, Y):
-        """Compute A^H @ Y where Y is (num_rows, l).
-
-        Uses a column-wise rank-1 accumulation to avoid allocating an
-        O(num_cols * l) broadcast temporary per row. Peak working memory
-        beyond the output buffer is O(num_cols) for a single conjugated row.
-        """
+        """Compute A^H @ Y where Y is (num_rows, l)."""
         if self._backend == "jax":
             return self._jax_rmatmat_fn(Y)
         conj = get_conj(self._backend)
         Y_cols = Y.shape[1]
         num_cols = self.shape[1]
         Z = get_zeros(self._backend)((num_cols, Y_cols), dtype=self.dtype)
+        # rank-1 accumulation avoids an O(num_cols * l) broadcast per row
         for i in range(self._num_rows):
             crow = conj(self._eval_row(i))
             for j in range(Y_cols):

@@ -11,7 +11,7 @@ from ..backends import get_normal, get_qr, get_svd, is_complex, real_dtype
 def randomized_range_finder(
     op: LinearOperator, rank: int, num_oversamples: int, num_power_iterations: int, backend: str
 ) -> ArrayLike:
-    r"""Compute an orthonormal matrix Q whose range approximates the range of op, i.e., "math:`op \approx Q Q^\dagger op`
+    r"""Compute an orthonormal matrix Q whose range approximates the range of op, i.e., :math:`op \approx Q Q^\dagger op`
 
     Parameters
     ----------
@@ -22,15 +22,14 @@ def randomized_range_finder(
     num_oversamples : int
         Number of additional random vectors to sample (beyond the target rank) to improve accuracy.
     num_power_iterations : int
-        Number of power iterations to perform to improve the approximation of the range. Each iteration involves multiplying by op and its adjoint, which can help capture the dominant singular vectors more accurately, especially when the singular values decay slowly.
+        Number of power iterations for improved accuracy.
     backend : str
-        Backend to use for computations. Supported backends are 'numpy', 'jax',
-        and 'cupy'.
+        Backend to use: 'numpy', 'jax', or 'cupy'.
 
     Returns
     -------
     Q : ArrayLike
-        Orthonormal matrix of shape (m, rank) whose range approximates the range of op, where m is the number of rows of op.
+        Orthonormal matrix of shape (m, rank + num_oversamples) whose range approximates the range of op, where m is the number of rows of op.
 
     References
     ----------
@@ -47,7 +46,6 @@ def randomized_range_finder(
     normal1 = get_normal(backend, seed=1)
     qr = get_qr(backend)
 
-    # Sample from a (standard normal) Gaussian distribution
     if is_complex(op.dtype):
         real_type = real_dtype(op.dtype)
         omega = math.sqrt(0.5) * (
@@ -56,13 +54,9 @@ def randomized_range_finder(
     else:
         omega = normal0((n, num_components), op.dtype)
 
-    q, _ = qr(
-        op._matmat(omega)
-    )  # Get an orthonormal basis for the range of Y = op @ omega, which approximates the range of op
+    q, _ = qr(op._matmat(omega))
 
-    # Power iteration loop:
-    # Apply op^H @ op (power method) while re-orthonormalizing (through QR) to
-    # prevent numerical instability
+    # power iteration with re-orthogonalization
     for _ in range(num_power_iterations):
         q, _ = qr(op._rmatmat(q))
         q, _ = qr(op._matmat(q))
@@ -86,10 +80,9 @@ def rsvd_left(
     num_oversamples : int
         Number of additional random vectors to sample (beyond the target rank) to improve accuracy.
     num_power_iterations : int
-        Number of power iterations to perform to improve the approximation of the range. Each iteration involves multiplying by op and its adjoint, which can help capture the dominant singular vectors more accurately, especially when the singular values decay slowly.
+        Number of power iterations for improved accuracy.
     backend : str
-        Backend to use for computations. Supported backends are 'numpy', 'jax',
-        and 'cupy'.
+        Backend to use: 'numpy', 'jax', or 'cupy'.
 
     Returns
     -------
