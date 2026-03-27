@@ -1191,6 +1191,10 @@ dependencies = [
 cupy = [
     { name = "cupy" },
 ]
+docs = [
+    { name = "sphinx" },
+    { name = "sphinx-rtd-theme" },
+]
 jax = [
     { name = "jax" },
 ]
@@ -1220,8 +1224,10 @@ requires-dist = [
     { name = "jax", extras = ["cuda13"], marker = "extra == 'jaxcuda13'", specifier = ">=0.9.0.1" },
     { name = "numpy", specifier = ">=2.4.2" },
     { name = "pylops", specifier = ">=2.6.0" },
+    { name = "sphinx", marker = "extra == 'docs'", specifier = ">=9.1.0" },
+    { name = "sphinx-rtd-theme", marker = "extra == 'docs'", specifier = ">=3.1.0" },
 ]
-provides-extras = ["jax", "jaxcuda12", "jaxcuda13", "cupy"]
+provides-extras = ["jax", "jaxcuda12", "jaxcuda13", "cupy", "docs"]
 
 [package.metadata.requires-dev]
 dev = [
