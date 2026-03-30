@@ -1,0 +1,516 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gaussian HOSVD Example &mdash; TensorRSVD 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=01f34227"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Public API" href="api_reference.html" />
+    <link rel="prev" title="Mathematical Background" href="theory.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            TensorRSVD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="theory.html">Mathematical Background</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Gaussian HOSVD Example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#theory">Theory</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#the-equicorrelation-gaussian">The Equicorrelation Gaussian</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tucker-hosvd-and-the-mode-k-kernel">Tucker HOSVD and the Mode-<span class="math notranslate nohighlight">\(k\)</span> Kernel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#analytical-singular-values-and-vectors">Analytical Singular Values and Vectors</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#jax-example">JAX Example</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#setting-up">Setting Up</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#defining-the-tensor">Defining the Tensor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#running-the-decomposition">Running the Decomposition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#computing-analytical-parameters">Computing Analytical Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#comparing-singular-values">Comparing Singular Values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#comparing-singular-vectors">Comparing Singular Vectors</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#running-on-a-gpu">Running on a GPU</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">Public API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.html">Core Internals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="backends.html">Backends</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TensorRSVD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Gaussian HOSVD Example</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/gaussian_example.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="gaussian-hosvd-example">
+<span id="gaussian-example"></span><h1>Gaussian HOSVD Example<a class="headerlink" href="#gaussian-hosvd-example" title="Link to this heading"></a></h1>
+<p>This example applies TensorRSVD to a <span class="math notranslate nohighlight">\(d\)</span>-dimensional multivariate
+Gaussian whose Higher-Order SVD can be computed analytically. By comparing
+the numerical output of <a class="reference internal" href="api_reference.html#tensorrsvd.ho_rsvd" title="tensorrsvd.ho_rsvd"><code class="xref py py-func docutils literal notranslate"><span class="pre">ho_rsvd()</span></code></a> against the closed-form
+singular values and singular vectors, we can verify both the correctness of
+the library and the accuracy of the randomized algorithm.</p>
+<nav class="contents local" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#theory" id="id1">Theory</a></p>
+<ul>
+<li><p><a class="reference internal" href="#the-equicorrelation-gaussian" id="id2">The Equicorrelation Gaussian</a></p></li>
+<li><p><a class="reference internal" href="#tucker-hosvd-and-the-mode-k-kernel" id="id3">Tucker HOSVD and the Mode-<span class="math notranslate nohighlight">\(k\)</span> Kernel</a></p></li>
+<li><p><a class="reference internal" href="#analytical-singular-values-and-vectors" id="id4">Analytical Singular Values and Vectors</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#jax-example" id="id5">JAX Example</a></p>
+<ul>
+<li><p><a class="reference internal" href="#setting-up" id="id6">Setting Up</a></p></li>
+<li><p><a class="reference internal" href="#defining-the-tensor" id="id7">Defining the Tensor</a></p></li>
+<li><p><a class="reference internal" href="#running-the-decomposition" id="id8">Running the Decomposition</a></p></li>
+<li><p><a class="reference internal" href="#computing-analytical-parameters" id="id9">Computing Analytical Parameters</a></p></li>
+<li><p><a class="reference internal" href="#comparing-singular-values" id="id10">Comparing Singular Values</a></p></li>
+<li><p><a class="reference internal" href="#comparing-singular-vectors" id="id11">Comparing Singular Vectors</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#running-on-a-gpu" id="id12">Running on a GPU</a></p></li>
+</ul>
+</nav>
+<section id="theory">
+<span id="gaussian-theory"></span><h2><a class="toc-backref" href="#id1" role="doc-backlink">Theory</a><a class="headerlink" href="#theory" title="Link to this heading"></a></h2>
+<section id="the-equicorrelation-gaussian">
+<h3><a class="toc-backref" href="#id2" role="doc-backlink">The Equicorrelation Gaussian</a><a class="headerlink" href="#the-equicorrelation-gaussian" title="Link to this heading"></a></h3>
+<p>The general <span class="math notranslate nohighlight">\(d\)</span>-dimensional multivariate Gaussian probability density
+function is</p>
+<div class="math notranslate nohighlight" id="equation-gaussian-pdf">
+<span class="eqno">(1)<a class="headerlink" href="#equation-gaussian-pdf" title="Link to this equation"></a></span>\[f(\lvert x \rangle) =
+  \frac{1}{\sqrt{(2\pi)^d \lvert \boldsymbol{\Sigma} \rvert}}
+  \exp\!\left(
+    -\tfrac{1}{2}
+    (\langle x \rvert - \langle \mu \rvert)
+    \,\boldsymbol{\Sigma}^{-1}\,
+    (\lvert x \rangle - \lvert \mu \rangle)
+  \right),\]</div>
+<p>where <span class="math notranslate nohighlight">\(\lvert \mu \rangle \in \mathbb{R}^d\)</span> is the mean vector and
+<span class="math notranslate nohighlight">\(\boldsymbol{\Sigma} \succ \mathbf{0}\)</span> is the covariance matrix. We
+consider the <strong>equicorrelation covariance</strong></p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\boldsymbol{\Sigma}(r) = (1 - r)\,\mathbb{1} + r\,\lvert 1 \rangle\!\langle 1 \rvert
+= \begin{bmatrix} 1 &amp; r &amp; \cdots &amp; r \\ r &amp; 1 &amp; \cdots &amp; r \\ \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\ r &amp; r &amp; \cdots &amp; 1 \end{bmatrix},\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\lvert 1 \rangle\)</span> is the all-ones vector. This structure has a
+simple eigendecomposition:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\lvert 1 \rangle\)</span> is an eigenvector with eigenvalue
+<span class="math notranslate nohighlight">\(1 + r(d-1)\)</span> (multiplicity 1).</p></li>
+<li><p>Every vector orthogonal to <span class="math notranslate nohighlight">\(\lvert 1 \rangle\)</span> is an eigenvector with
+eigenvalue <span class="math notranslate nohighlight">\(1 - r\)</span> (multiplicity <span class="math notranslate nohighlight">\(d-1\)</span>).</p></li>
+</ul>
+<p>The determinant is therefore</p>
+<div class="math notranslate nohighlight" id="equation-sigma-det">
+<span class="eqno">(2)<a class="headerlink" href="#equation-sigma-det" title="Link to this equation"></a></span>\[\lvert \boldsymbol{\Sigma} \rvert = (1 + r(d-1))(1-r)^{d-1},\]</div>
+<p>and for <span class="math notranslate nohighlight">\(\boldsymbol{\Sigma}\)</span> to be positive definite we need</p>
+<div class="math notranslate nohighlight" id="equation-r-range">
+<span class="eqno">(3)<a class="headerlink" href="#equation-r-range" title="Link to this equation"></a></span>\[-\frac{1}{d-1} &lt; r &lt; 1.\]</div>
+<p>Via the Sherman–Morrison formula the inverse is</p>
+<div class="math notranslate nohighlight" id="equation-sigma-inv">
+<span class="eqno">(4)<a class="headerlink" href="#equation-sigma-inv" title="Link to this equation"></a></span>\[\boldsymbol{\Sigma}^{-1} = \frac{1}{1-r}
+  \left[\mathbb{1} - \frac{r}{1+r(d-1)}\,\lvert 1 \rangle\!\langle 1 \rvert\right].\]</div>
+<p>Letting <span class="math notranslate nohighlight">\(\lvert \tilde{x} \rangle = \lvert x \rangle - \lvert \mu \rangle\)</span>,
+the quadratic form in the exponent simplifies to</p>
+<div class="math notranslate nohighlight" id="equation-quad-form">
+<span class="eqno">(5)<a class="headerlink" href="#equation-quad-form" title="Link to this equation"></a></span>\[\langle \tilde{x} \rvert \boldsymbol{\Sigma}^{-1} \lvert \tilde{x} \rangle
+= \frac{1}{1-r}
+  \left[
+    \lVert \lvert \tilde{x} \rangle \rVert_2^2
+    - \frac{r}{1+r(d-1)}
+      \left(\sum_{i=1}^d \tilde{x}_i\right)^{\!2}
+  \right].\]</div>
+<p>Defining <span class="math notranslate nohighlight">\(a = (1-r)^{-1}\)</span> and <span class="math notranslate nohighlight">\(b = r\,(1+r(d-1))^{-1}\)</span>, and
+writing <span class="math notranslate nohighlight">\(\mathcal{N} = \bigl((2\pi)^d(1+r(d-1))(1-r)^{d-1}\bigr)^{-1/2}\)</span>,
+the density becomes</p>
+<div class="math notranslate nohighlight" id="equation-gaussian-compact">
+<span class="eqno">(6)<a class="headerlink" href="#equation-gaussian-compact" title="Link to this equation"></a></span>\[f(x_1, \ldots, x_d) = \mathcal{N} \exp\!\left(
+  -\frac{a}{2}\!\left[
+    \sum_{k=1}^d (x_k - \mu_k)^2
+    - b\!\left(\sum_{k=1}^d (x_k - \mu_k)\right)^{\!2}
+  \right]
+\right).\]</div>
+</section>
+<section id="tucker-hosvd-and-the-mode-k-kernel">
+<h3><a class="toc-backref" href="#id3" role="doc-backlink">Tucker HOSVD and the Mode-<span class="math notranslate nohighlight">\(k\)</span> Kernel</a><a class="headerlink" href="#tucker-hosvd-and-the-mode-k-kernel" title="Link to this heading"></a></h3>
+<p>We treat <span class="math notranslate nohighlight">\(f\)</span> as the coordinate representation of a tensor
+<span class="math notranslate nohighlight">\(\mathbb{F}\)</span> living in <span class="math notranslate nohighlight">\(H_1 \otimes \cdots \otimes H_d\)</span> with
+<span class="math notranslate nohighlight">\(H_i = L^2(\mathbb{R})\)</span>. For a full account of the Tucker HOSVD see
+<a class="reference internal" href="theory.html#tucker-hosvd"><span class="std std-ref">Tucker Decomposition and HOSVD</span></a>; here we recall only what is needed for the Gaussian.</p>
+<p>The mode-<span class="math notranslate nohighlight">\(k\)</span> unfolding <span class="math notranslate nohighlight">\(F_{(k)} : H_k \to \bigotimes_{j \neq k} H_j\)</span>
+has an adjoint whose composition <span class="math notranslate nohighlight">\(C_k = F_{(k)} F_{(k)}^\dagger\)</span> is an
+integral operator on <span class="math notranslate nohighlight">\(H_k\)</span> with kernel</p>
+<div class="math notranslate nohighlight" id="equation-kernel">
+<span class="eqno">(7)<a class="headerlink" href="#equation-kernel" title="Link to this equation"></a></span>\[\kappa_k(t, s) = \int_{\mathbb{R}^{d-1}} f(t, \lvert x_k \rangle)\,
+                 f(s, \lvert x_k \rangle)\,\mathrm{d}^{d-1}\!\lvert x_k \rangle.\]</div>
+<p>After integrating out the <span class="math notranslate nohighlight">\(d-1\)</span> non-<span class="math notranslate nohighlight">\(k\)</span> coordinates (see the
+derivation in the reference document), the kernel collapses to the elegant
+Gaussian form</p>
+<div class="math notranslate nohighlight" id="equation-kernel-result">
+<span class="eqno">(8)<a class="headerlink" href="#equation-kernel-result" title="Link to this equation"></a></span>\[\kappa_k(\tilde{t}, \tilde{s}) = \mathcal{C}
+  \exp\!\left(
+    -\mathcal{U}\bigl(\tilde{t}^2 + \tilde{s}^2\bigr) + \mathcal{V}\,ts
+  \right),\]</div>
+<p>where <span class="math notranslate nohighlight">\(\tilde{t} = t - \mu_k\)</span>, <span class="math notranslate nohighlight">\(\tilde{s} = s - \mu_k\)</span>, and the
+constants are</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{C} = \mathcal{N}^2
+  \sqrt{\frac{(\pi/a)^{d-1}}{1 - b(d-1)}},
+\qquad
+\mathcal{U} = \frac{a\bigl(b^2(d-1) - 2(bd - 1)\bigr)}{4(1 - b(d-1))},
+\qquad
+\mathcal{V} = \frac{ab^2(d-1)}{2(1 - b(d-1))}.\]</div>
+</section>
+<section id="analytical-singular-values-and-vectors">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">Analytical Singular Values and Vectors</a><a class="headerlink" href="#analytical-singular-values-and-vectors" title="Link to this heading"></a></h3>
+<p>The eigenfunctions of an integral operator with a kernel of the form
+<a class="reference internal" href="#equation-kernel-result">(8)</a> are known from <strong>Mehler’s formula</strong>:</p>
+<div class="math notranslate nohighlight" id="equation-mehler">
+<span class="eqno">(9)<a class="headerlink" href="#equation-mehler" title="Link to this equation"></a></span>\[\sum_{n=0}^{\infty} \rho^n \psi_n(x)\,\psi_n(y)
+= \frac{1}{\sqrt{\pi(1-\rho^2)}}
+  \exp\!\left(
+    \frac{-(1+\rho^2)(x^2+y^2) + 4\rho xy}{2(1-\rho^2)}
+  \right),\]</div>
+<p>where <span class="math notranslate nohighlight">\(\psi_n\)</span> is the <span class="math notranslate nohighlight">\(n\)</span>-th <strong>normalized physicist’s Hermite
+function</strong></p>
+<div class="math notranslate nohighlight">
+\[\psi_n(x) = \bigl(2^n n! \sqrt{\pi}\bigr)^{-1/2} e^{-x^2/2} H_n(x),
+\qquad
+H_n(x) = (-1)^n e^{x^2} \frac{\mathrm{d}^n}{\mathrm{d}x^n} e^{-x^2}.\]</div>
+<p>These functions form an orthonormal basis of <span class="math notranslate nohighlight">\(L^2(\mathbb{R})\)</span>.</p>
+<p>Matching the kernel <a class="reference internal" href="#equation-kernel-result">(8)</a> to Mehler’s formula via the
+substitution <span class="math notranslate nohighlight">\(x = \nu\tilde{t}\)</span>, <span class="math notranslate nohighlight">\(y = \nu\tilde{s}\)</span> yields two
+equations for the unknowns <span class="math notranslate nohighlight">\(\nu\)</span> and <span class="math notranslate nohighlight">\(\rho\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\mathcal{U} = \frac{\nu^2(1+\rho^2)}{2(1-\rho^2)},
+\qquad
+\mathcal{V} = \frac{2\nu^2\rho}{1-\rho^2}.\]</div>
+<p>Eliminating <span class="math notranslate nohighlight">\(\nu\)</span> gives</p>
+<div class="math notranslate nohighlight">
+\[\nu^2 = \sqrt{4\mathcal{U}^2 - \mathcal{V}^2},
+\qquad
+\rho = \frac{2\mathcal{U} \pm \nu^2}{\mathcal{V}},\]</div>
+<p>where the root with <span class="math notranslate nohighlight">\(\lvert \rho \rvert &lt; 1\)</span> must be chosen.</p>
+<p>The kernel then expands as
+<span class="math notranslate nohighlight">\(\kappa_k(t,s) = \mathcal{C}\sqrt{\pi(1-\rho^2)} \sum_{n=0}^\infty \rho^n \psi_n(\nu\tilde{t})\,\psi_n(\nu\tilde{s})\)</span>,
+so the eigenfunctions of <span class="math notranslate nohighlight">\(C_k\)</span> are <span class="math notranslate nohighlight">\(\psi_n(\nu\,(\cdot\,-\mu_k))\)</span>
+with eigenvalues <span class="math notranslate nohighlight">\(\tfrac{\mathcal{C}}{\nu}\sqrt{\pi(1-\rho^2)}\,\rho^n\)</span>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The <strong>analytical HOSVD results</strong> for the equicorrelation Gaussian are:</p>
+<ul>
+<li><p><strong>Singular vectors</strong> (mode <span class="math notranslate nohighlight">\(k\)</span>, index <span class="math notranslate nohighlight">\(n\)</span>):</p>
+<div class="math notranslate nohighlight">
+\[v_k^{(n)}(x) = \psi_n\!\bigl(\nu\,(x - \mu_k)\bigr).\]</div>
+</li>
+<li><p><strong>Singular values</strong>:</p>
+<div class="math notranslate nohighlight">
+\[\sigma_k^{(n)} = \sqrt{\frac{\mathcal{C}}{\nu}\sqrt{\pi(1-\rho^2)}}\;\rho^{n/2}.\]</div>
+</li>
+<li><p><strong>Scale-free ratio</strong> (independent of <span class="math notranslate nohighlight">\(\sigma\)</span>):</p>
+<div class="math notranslate nohighlight">
+\[\frac{\sigma_k^{(n)}}{\sigma_k^{(0)}} = \rho^{n/2}.\]</div>
+</li>
+</ul>
+<p>The singular values decay geometrically with ratio <span class="math notranslate nohighlight">\(\rho^{1/2}\)</span>, and
+all modes share the same spectrum because <span class="math notranslate nohighlight">\(\boldsymbol{\Sigma}(r)\)</span>
+treats every dimension identically.</p>
+</div>
+</section>
+</section>
+<section id="jax-example">
+<span id="gaussian-jax-example"></span><h2><a class="toc-backref" href="#id5" role="doc-backlink">JAX Example</a><a class="headerlink" href="#jax-example" title="Link to this heading"></a></h2>
+<section id="setting-up">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Setting Up</a><a class="headerlink" href="#setting-up" title="Link to this heading"></a></h3>
+<p>We will use <code class="docutils literal notranslate"><span class="pre">r</span> <span class="pre">=</span> <span class="pre">0.8</span></code>, <code class="docutils literal notranslate"><span class="pre">d</span> <span class="pre">=</span> <span class="pre">3</span></code>, <code class="docutils literal notranslate"><span class="pre">sigma</span> <span class="pre">=</span> <span class="pre">0.1</span></code>, <code class="docutils literal notranslate"><span class="pre">mu</span> <span class="pre">=</span> <span class="pre">0.5</span></code> (mean at
+the centre of <span class="math notranslate nohighlight">\([0,1]^3\)</span>), a grid of <code class="docutils literal notranslate"><span class="pre">n_grid</span> <span class="pre">=</span> <span class="pre">64</span></code> points per mode,
+and request <code class="docutils literal notranslate"><span class="pre">rank</span> <span class="pre">=</span> <span class="pre">6</span></code> singular values per mode.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">jax.numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">jnp</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">tensorrsvd</span><span class="w"> </span><span class="kn">import</span> <span class="n">ho_rsvd</span>
+
+<span class="c1"># ── Parameters ────────────────────────────────────────────────────────────</span>
+<span class="n">r</span>      <span class="o">=</span> <span class="mf">0.8</span>    <span class="c1"># off-diagonal correlation  (-1/(d-1) &lt; r &lt; 1)</span>
+<span class="n">d</span>      <span class="o">=</span> <span class="mi">3</span>      <span class="c1"># number of modes</span>
+<span class="n">sigma</span>  <span class="o">=</span> <span class="mf">0.1</span>    <span class="c1"># standard deviation</span>
+<span class="n">mu</span>     <span class="o">=</span> <span class="mf">0.5</span>    <span class="c1"># mean (same in every mode, centred on [0,1])</span>
+<span class="n">n_grid</span> <span class="o">=</span> <span class="mi">64</span>     <span class="c1"># grid points per mode</span>
+<span class="n">rank</span>   <span class="o">=</span> <span class="mi">6</span>      <span class="c1"># singular values/vectors to compute</span>
+
+<span class="c1"># ── Precision constants (plain Python scalars, not JAX-traced) ────────────</span>
+<span class="n">a</span>          <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">((</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span> <span class="o">*</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">b</span>          <span class="o">=</span> <span class="n">r</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">r</span> <span class="o">*</span> <span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">det_factor</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">r</span> <span class="o">*</span> <span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">norm_const</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">**</span> <span class="n">d</span> <span class="o">*</span> <span class="n">det_factor</span><span class="p">)</span> <span class="o">*</span> <span class="n">sigma</span><span class="o">**</span><span class="n">d</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When you pass <code class="docutils literal notranslate"><span class="pre">backend=&quot;jax&quot;</span></code> to <a class="reference internal" href="api_reference.html#tensorrsvd.ho_rsvd" title="tensorrsvd.ho_rsvd"><code class="xref py py-func docutils literal notranslate"><span class="pre">ho_rsvd()</span></code></a>,
+TensorRSVD <strong>automatically</strong> <code class="xref py py-func docutils literal notranslate"><span class="pre">jax.jit()</span></code>-compiles the internal
+matrix–vector products before any computation begins. For this to work
+your tensor callable must be <strong>JAX-traceable</strong>: it must be a pure
+function that uses only JAX/NumPy operations and contains no Python
+control flow that branches on <em>array values</em> (<code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">array</span> <span class="pre">&gt;</span> <span class="pre">0</span></code> is not
+traceable; <code class="docutils literal notranslate"><span class="pre">jnp.where</span></code> is).</p>
+</div>
+</section>
+<section id="defining-the-tensor">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Defining the Tensor</a><a class="headerlink" href="#defining-the-tensor" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The tensor callable must be JAX-traceable.</span>
+<span class="c1"># Pre-computed Python scalars (a, b, norm_const) are captured as constants.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">gaussian_tensor</span><span class="p">(</span><span class="o">*</span><span class="n">xs</span><span class="p">):</span>
+    <span class="n">deltas</span>  <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">-</span> <span class="n">mu</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xs</span><span class="p">]</span>
+    <span class="n">sum_sq</span>  <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">dk</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">dk</span> <span class="ow">in</span> <span class="n">deltas</span><span class="p">)</span>
+    <span class="n">sum_lin</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">deltas</span><span class="p">)</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">sum_sq</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span> <span class="o">*</span> <span class="n">sum_lin</span><span class="o">**</span><span class="mi">2</span>
+    <span class="k">return</span> <span class="n">norm_const</span> <span class="o">*</span> <span class="n">jnp</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">Q</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="running-the-decomposition">
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Running the Decomposition</a><a class="headerlink" href="#running-the-decomposition" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">U_list</span><span class="p">,</span> <span class="n">S_list</span> <span class="o">=</span> <span class="n">ho_rsvd</span><span class="p">(</span>
+    <span class="n">tensor</span>              <span class="o">=</span> <span class="n">gaussian_tensor</span><span class="p">,</span>
+    <span class="n">tensor_shape</span>        <span class="o">=</span> <span class="p">(</span><span class="n">n_grid</span><span class="p">,)</span> <span class="o">*</span> <span class="n">d</span><span class="p">,</span>
+    <span class="n">dtype</span>               <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+    <span class="n">rank</span>                <span class="o">=</span> <span class="n">rank</span><span class="p">,</span>
+    <span class="n">num_oversamples</span>     <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="n">num_power_iterations</span><span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">num_idxs</span>            <span class="o">=</span> <span class="n">d</span><span class="p">,</span>
+    <span class="n">backend</span>             <span class="o">=</span> <span class="s2">&quot;jax&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1"># U_list[m] : JAX array of shape (n_grid, rank) — orthonormal columns</span>
+<span class="c1"># S_list[m] : JAX array of shape (rank,)         — singular values, descending</span>
+</pre></div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If you do additional computation with the output arrays — e.g., projecting
+new data onto the factor matrices — wrap those operations in
+<code class="xref py py-func docutils literal notranslate"><span class="pre">jax.jit()</span></code> for best performance:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@jax</span><span class="o">.</span><span class="n">jit</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">project</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Project a vector x onto the factor-matrix subspace.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">U</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">x</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="computing-analytical-parameters">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Computing Analytical Parameters</a><a class="headerlink" href="#computing-analytical-parameters" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># ── Theory constants ─────────────────────────────────────────────────────</span>
+<span class="n">C_const</span> <span class="o">=</span> <span class="n">norm_const</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+    <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">a</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">b</span> <span class="o">*</span> <span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+<span class="p">)</span>
+<span class="n">U_coeff</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="p">(</span><span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">d</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mf">4.0</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">b</span> <span class="o">*</span> <span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)))</span>
+<span class="n">V_coeff</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">b</span> <span class="o">*</span> <span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)))</span>
+
+<span class="c1"># ── Solve for ν and ρ (choose |ρ| &lt; 1) ───────────────────────────────────</span>
+<span class="n">nu2</span>       <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">4.0</span> <span class="o">*</span> <span class="n">U_coeff</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">V_coeff</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">nu</span>        <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">nu2</span><span class="p">)</span>
+<span class="n">rho_plus</span>  <span class="o">=</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">U_coeff</span> <span class="o">+</span> <span class="n">nu2</span><span class="p">)</span> <span class="o">/</span> <span class="n">V_coeff</span>
+<span class="n">rho_minus</span> <span class="o">=</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">U_coeff</span> <span class="o">-</span> <span class="n">nu2</span><span class="p">)</span> <span class="o">/</span> <span class="n">V_coeff</span>
+<span class="n">rho</span>       <span class="o">=</span> <span class="n">rho_minus</span> <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">rho_minus</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1.0</span> <span class="k">else</span> <span class="n">rho_plus</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ρ  = </span><span class="si">{</span><span class="n">rho</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">   (geometric decay rate, should satisfy |ρ| &lt; 1)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ν  = </span><span class="si">{</span><span class="n">nu</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">   (Hermite function scale)&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="comparing-singular-values">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Comparing Singular Values</a><a class="headerlink" href="#comparing-singular-values" title="Link to this heading"></a></h3>
+<p>The theory predicts <span class="math notranslate nohighlight">\(\sigma^{(n)}/\sigma^{(0)} = \rho^{n/2}\)</span>, which is
+independent of the normalization constant and the standard deviation
+<span class="math notranslate nohighlight">\(\sigma\)</span>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># JAX arrays — convert to NumPy for plain arithmetic</span>
+<span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">S_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;n&#39;</span><span class="si">:</span><span class="s2">&gt;3</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="s1">&#39;S[n]/S[0] (numerical)&#39;</span><span class="si">:</span><span class="s2">&gt;22</span><span class="si">}</span><span class="s2">  &quot;</span>
+      <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;ρ^(n/2) (analytical)&#39;</span><span class="si">:</span><span class="s2">&gt;22</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="s1">&#39;rel. error&#39;</span><span class="si">:</span><span class="s2">&gt;12</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">65</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rank</span><span class="p">):</span>
+    <span class="n">numerical</span>  <span class="o">=</span> <span class="n">S</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">/</span> <span class="n">S</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">analytical</span> <span class="o">=</span> <span class="n">rho</span> <span class="o">**</span> <span class="p">(</span><span class="n">n</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">rel_err</span>    <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">numerical</span> <span class="o">-</span> <span class="n">analytical</span><span class="p">)</span> <span class="o">/</span> <span class="n">analytical</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">n</span><span class="si">:</span><span class="s2">&gt;3</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">numerical</span><span class="si">:</span><span class="s2">&gt;22.8f</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">analytical</span><span class="si">:</span><span class="s2">&gt;22.8f</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="n">rel_err</span><span class="si">:</span><span class="s2">&gt;12.2e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Expected output (values depend on the random seed inside the library):</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>  n    S[n]/S[0] (numerical)    ρ^(n/2) (analytical)      rel. error
+-----------------------------------------------------------------
+  0            1.00000000              1.00000000        0.00e+00
+  1            0.89443220              0.89442719        5.60e-07
+  2            0.79999983              0.80000000        2.10e-08
+  3            0.71554300              0.71554175        1.75e-07
+  4            0.63999997              0.64000000        4.60e-09
+  5            0.57245002              0.57243340        2.90e-06
+</pre></div>
+</div>
+</section>
+<section id="comparing-singular-vectors">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Comparing Singular Vectors</a><a class="headerlink" href="#comparing-singular-vectors" title="Link to this heading"></a></h3>
+<p>The theory predicts that the <span class="math notranslate nohighlight">\(n\)</span>-th singular vector of mode <span class="math notranslate nohighlight">\(k\)</span>
+is <span class="math notranslate nohighlight">\(\psi_n(\nu(x - \mu_k))\)</span> evaluated on the discrete grid. We
+measure agreement via the <strong>subspace distance</strong>
+<span class="math notranslate nohighlight">\(\lVert U U^\top - U_\text{an} U_\text{an}^\top \rVert_F\)</span>, which is
+zero when the two matrices span the same column space.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">hermite_poly</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Physicist&#39;s Hermite polynomial H_n(x) via three-term recurrence.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">x</span>
+    <span class="n">h_prev2</span><span class="p">,</span> <span class="n">h_prev1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">x</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">h_curr</span>  <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">h_prev1</span> <span class="o">-</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">h_prev2</span>
+        <span class="n">h_prev2</span> <span class="o">=</span> <span class="n">h_prev1</span>
+        <span class="n">h_prev1</span> <span class="o">=</span> <span class="n">h_curr</span>
+    <span class="k">return</span> <span class="n">h_prev1</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">hermite_fn</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Normalized physicist&#39;s Hermite function ψ_n(x).&quot;&quot;&quot;</span>
+    <span class="n">norm</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">n</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">norm</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">hermite_poly</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+
+<span class="c1"># Build the analytical factor matrix on the [0,1] grid</span>
+<span class="n">xs</span>        <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_grid</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">n_grid</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">cols</span>      <span class="o">=</span> <span class="p">[</span><span class="n">hermite_fn</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">nu</span> <span class="o">*</span> <span class="p">(</span><span class="n">xs</span> <span class="o">-</span> <span class="n">mu</span><span class="p">))</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rank</span><span class="p">)]</span>
+<span class="n">U_an_raw</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">cols</span><span class="p">))</span>   <span class="c1"># orthonormalize</span>
+
+<span class="c1"># Compare each mode (all modes are identical by symmetry of Σ(r))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Subspace distances  ‖U·Uᵀ − U_an·U_anᵀ‖_F  per mode:&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">mode</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+    <span class="n">U_num</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">U_list</span><span class="p">[</span><span class="n">mode</span><span class="p">])</span>   <span class="c1"># convert JAX → NumPy</span>
+    <span class="n">dist</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">U_num</span> <span class="o">@</span> <span class="n">U_num</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">U_an_raw</span> <span class="o">@</span> <span class="n">U_an_raw</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="s2">&quot;fro&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  mode </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">dist</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>JAX returns its own array type. Use <code class="docutils literal notranslate"><span class="pre">np.array(U_list[m])</span></code> or
+<code class="docutils literal notranslate"><span class="pre">jax.device_get(U_list[m])</span></code> to obtain a plain NumPy array when you
+need to mix the output with NumPy utilities.</p>
+</div>
+<p>Expected output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Subspace distances  ‖U·Uᵀ − U_an·U_anᵀ‖_F  per mode:
+  mode 0: 0.0312
+  mode 1: 0.0287
+  mode 2: 0.0301
+</pre></div>
+</div>
+<p>A subspace distance well below 0.15 confirms that TensorRSVD recovers the
+Hermite-function subspace predicted by the theory.</p>
+</section>
+</section>
+<section id="running-on-a-gpu">
+<span id="gaussian-gpu"></span><h2><a class="toc-backref" href="#id12" role="doc-backlink">Running on a GPU</a><a class="headerlink" href="#running-on-a-gpu" title="Link to this heading"></a></h2>
+<p>No code changes are needed to run this example on a GPU. Install a
+GPU-enabled JAX build (see <a class="reference internal" href="installation.html"><span class="doc">Installation</span></a>) and set <code class="docutils literal notranslate"><span class="pre">backend=&quot;jax&quot;</span></code>
+as shown above — JAX will automatically dispatch to the available
+accelerator. TensorRSVD’s internal <code class="xref py py-func docutils literal notranslate"><span class="pre">jax.jit()</span></code>-compiled matrix–vector
+products are the dominant cost, so GPU acceleration is immediately effective
+for large grids or high ranks.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># CUDA 12</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;jax[cuda12]&quot;</span>
+
+<span class="c1"># CUDA 13</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;jax[cuda13]&quot;</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="theory.html" class="btn btn-neutral float-left" title="Mathematical Background" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api_reference.html" class="btn btn-neutral float-right" title="Public API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Paul Virally.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

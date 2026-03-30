@@ -44,6 +44,7 @@ the :doc:`User Guide <user_guide>` for a full walkthrough, and the :doc:`Theory
    installation
    user_guide
    theory
+   gaussian_example
    api_reference
    core
    backends
