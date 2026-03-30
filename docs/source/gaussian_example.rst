@@ -38,7 +38,7 @@ function is
 
 where :math:`\lvert \mu \rangle \in \mathbb{R}^d` is the mean vector and
 :math:`\boldsymbol{\Sigma} \succ \mathbf{0}` is the covariance matrix. We
-consider the **equicorrelation covariance**
+consider the equicorrelation covariance
 
 .. math::
 
@@ -244,7 +244,7 @@ and request ``rank = 6`` singular values per mode.
 
    from tensorrsvd import ho_rsvd
 
-   # ── Parameters ────────────────────────────────────────────────────────────
+   # Parameters
    r      = 0.8    # off-diagonal correlation  (-1/(d-1) < r < 1)
    d      = 3      # number of modes
    sigma  = 0.1    # standard deviation
@@ -252,7 +252,7 @@ and request ``rank = 6`` singular values per mode.
    n_grid = 64     # grid points per mode
    rank   = 6      # singular values/vectors to compute
 
-   # ── Precision constants (plain Python scalars, not JAX-traced) ────────────
+   # Precision constants (plain Python scalars, not JAX-traced)
    a          = 1.0 / ((1.0 - r) * sigma**2)
    b          = r / (1.0 + r * (d - 1))
    det_factor = (1.0 + r * (d - 1)) * (1.0 - r) ** (d - 1)
@@ -288,22 +288,22 @@ Running the Decomposition
 .. code-block:: python
 
    U_list, S_list = ho_rsvd(
-       tensor              = gaussian_tensor,
-       tensor_shape        = (n_grid,) * d,
-       dtype               = jnp.float64,
-       rank                = rank,
-       num_oversamples     = 10,
-       num_power_iterations= 2,
-       num_idxs            = d,
-       backend             = "jax",
+       tensor               = gaussian_tensor,
+       tensor_shape         = (n_grid,) * d,
+       dtype                = jnp.float64,
+       rank                 = rank,
+       num_oversamples      = 10,
+       num_power_iterations = 2,
+       num_idxs             = d,
+       backend              = "jax",
    )
-   # U_list[m] : JAX array of shape (n_grid, rank) — orthonormal columns
-   # S_list[m] : JAX array of shape (rank,)         — singular values, descending
+   # U_list[m] : JAX array of shape (n_grid, rank) (orthonormal columns)
+   # S_list[m] : JAX array of shape (rank,) (decreasing singular values)
 
 .. tip::
 
-   If you do additional computation with the output arrays — e.g., projecting
-   new data onto the factor matrices — wrap those operations in
+   If you do additional computation with the output arrays (e.g., projecting
+   new data onto the factor matrices) wrap those operations in
    :func:`jax.jit` for best performance:
 
    .. code-block:: python
@@ -318,14 +318,14 @@ Computing Analytical Parameters
 
 .. code-block:: python
 
-   # ── Theory constants ─────────────────────────────────────────────────────
+   # Theory constants
    C_const = norm_const**2 * math.sqrt(
        (math.pi / a) ** (d - 1) / (1.0 - b * (d - 1))
    )
    U_coeff = a * (b**2 * (d - 1) - 2.0 * (b * d - 1.0)) / (4.0 * (1.0 - b * (d - 1)))
    V_coeff = a * b**2 * (d - 1) / (2.0 * (1.0 - b * (d - 1)))
 
-   # ── Solve for ν and ρ (choose |ρ| < 1) ───────────────────────────────────
+   # Solve for ν and ρ (choose |ρ| < 1)
    nu2       = math.sqrt(4.0 * U_coeff**2 - V_coeff**2)
    nu        = math.sqrt(nu2)
    rho_plus  = (2.0 * U_coeff + nu2) / V_coeff
@@ -344,7 +344,7 @@ independent of the normalization constant and the standard deviation
 
 .. code-block:: python
 
-   # JAX arrays — convert to NumPy for plain arithmetic
+   # JAX arrays (convert to NumPy for plain arithmetic)
    S = np.array(S_list[0])
 
    print(f"\n{'n':>3}  {'S[n]/S[0] (numerical)':>22}  "
@@ -374,7 +374,7 @@ Comparing Singular Vectors
 
 The theory predicts that the :math:`n`-th singular vector of mode :math:`k`
 is :math:`\psi_n(\nu(x - \mu_k))` evaluated on the discrete grid. We
-measure agreement via the **subspace distance**
+measure agreement via the subspace distance
 :math:`\lVert U U^\top - U_\text{an} U_\text{an}^\top \rVert_F`, which is
 zero when the two matrices span the same column space.
 
@@ -401,15 +401,15 @@ zero when the two matrices span the same column space.
 
 
    # Build the analytical factor matrix on the [0,1] grid
-   xs        = np.arange(n_grid) / (n_grid - 1)
-   cols      = [hermite_fn(n, nu * (xs - mu)) for n in range(rank)]
-   U_an_raw, _ = np.linalg.qr(np.column_stack(cols))   # orthonormalize
+   xs = np.arange(n_grid) / (n_grid - 1)
+   cols = [hermite_fn(n, nu * (xs - mu)) for n in range(rank)]
+   U_an_raw, _ = np.linalg.qr(np.column_stack(cols)) # re-orthonormalize to be safe
 
    # Compare each mode (all modes are identical by symmetry of Σ(r))
-   print("\nSubspace distances  ‖U·Uᵀ − U_an·U_anᵀ‖_F  per mode:")
+   print("\nSubspace distances ‖U·Uᵀ − U_an·U_anᵀ‖_F per mode:")
    for mode in range(d):
        U_num = np.array(U_list[mode])   # convert JAX → NumPy
-       dist  = np.linalg.norm(U_num @ U_num.T - U_an_raw @ U_an_raw.T, "fro")
+       dist = np.linalg.norm(U_num @ U_num.T - U_an_raw @ U_an_raw.T, "fro")
        print(f"  mode {mode}: {dist:.4f}")
 
 .. note::
@@ -437,7 +437,7 @@ Running on a GPU
 
 No code changes are needed to run this example on a GPU. Install a
 GPU-enabled JAX build (see :doc:`installation`) and set ``backend="jax"``
-as shown above — JAX will automatically dispatch to the available
+as shown above. JAX will automatically dispatch to the available
 accelerator. TensorRSVD's internal :func:`jax.jit`-compiled matrix–vector
 products are the dominant cost, so GPU acceleration is immediately effective
 for large grids or high ranks.
