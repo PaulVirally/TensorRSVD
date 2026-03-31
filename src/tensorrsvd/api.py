@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+import numpy as np
 from numpy.typing import ArrayLike, DTypeLike
 
 from .core import MatricizedTensorOperator, rsvd_left
@@ -125,3 +126,110 @@ def ho_rsvd(
         S_list.append(Sm)
 
     return U_list, S_list
+
+
+def reconstruct(
+    tensor: Callable,
+    tensor_shape: tuple[int, ...],
+    U_list: list[ArrayLike],
+    dtype: DTypeLike,
+    backend: str = "numpy",
+) -> np.ndarray:
+    """Return the Tucker low-rank approximation of a tensor as a dense array.
+
+    Materializes the tensor on the coordinate grid and projects each mode onto
+    the column space of the corresponding factor matrix from
+    :func:`~tensorrsvd.ho_rsvd`. The Tucker projection formula applied
+    mode-by-mode is:
+
+    .. math::
+
+       \\hat{\\mathcal{T}} = \\mathcal{T} \\times_0 P_0 \\times_1 P_1
+       \\cdots \\times_{k-1} P_{k-1}, \\quad P_m = U_m U_m^\\top.
+
+    This is equivalent to projecting onto the Tucker subspace without
+    explicitly forming the core tensor.
+
+    Parameters
+    ----------
+    tensor : Callable
+        The same callable passed to :func:`~tensorrsvd.ho_rsvd`. Must accept
+        ``k`` array arguments (normalized coordinates in ``[0, 1]``) and return
+        the tensor values at those coordinates.
+    tensor_shape : tuple of ints
+        Shape of the tensor ``(n_0, ..., n_{k-1})``, matching the value used
+        in :func:`~tensorrsvd.ho_rsvd`.
+    U_list : list of ArrayLike
+        Factor matrices returned by :func:`~tensorrsvd.ho_rsvd`. Each
+        ``U_list[m]`` has shape ``(n_m, rank_m)`` with orthonormal columns.
+    dtype : DTypeLike
+        Numeric dtype for the output array.
+    backend : str, optional
+        Backend used to evaluate the tensor callable: ``'numpy'`` (default),
+        ``'jax'``, or ``'cupy'``. Use the same backend as in
+        :func:`~tensorrsvd.ho_rsvd` so the tensor callable receives the
+        correct array type.
+
+    Returns
+    -------
+    numpy.ndarray
+        Dense Tucker approximation with shape ``tensor_shape`` and dtype
+        ``dtype``.
+
+    Notes
+    -----
+    Reconstruction requires materializing the full tensor as a dense array.
+    This is suitable for validation and small tensors, but defeats the
+    memory savings of :func:`~tensorrsvd.ho_rsvd` for large tensors.
+
+    Examples
+    --------
+    Decompose a linear tensor and verify near-exact reconstruction:
+
+    >>> import numpy as np
+    >>> from tensorrsvd import ho_rsvd, reconstruct
+    >>> def my_tensor(x0, x1, x2):
+    ...     return x0 - x1 + x2
+    >>> shape = (16, 16, 16)
+    >>> U_list, S_list = ho_rsvd(
+    ...     tensor=my_tensor,
+    ...     tensor_shape=shape,
+    ...     dtype=np.float64,
+    ...     rank=3,
+    ...     num_oversamples=5,
+    ...     num_idxs=3,
+    ... )
+    >>> T_hat = reconstruct(my_tensor, shape, U_list, dtype=np.float64)
+    >>> T_hat.shape
+    (16, 16, 16)
+
+    Compute the relative reconstruction error:
+
+    >>> grids = [np.arange(n) / (n - 1) for n in shape]
+    >>> coords = np.meshgrid(*grids, indexing="ij")
+    >>> T_true = my_tensor(*coords)
+    >>> rel_err = np.linalg.norm(T_true - T_hat) / np.linalg.norm(T_true)
+    >>> rel_err < 1e-6
+    True
+
+    See Also
+    --------
+    tensorrsvd.ho_rsvd :
+        Compute the factor matrices and singular values used as input here.
+    """
+    from .backends import get_arange, get_meshgrid
+
+    arange = get_arange(backend)
+    meshgrid = get_meshgrid(backend)
+
+    grids = [arange(n, dtype=dtype) / max(n - 1, 1) for n in tensor_shape]
+    coords = meshgrid(*grids, indexing="ij")
+    T = np.array(tensor(*coords))
+
+    for mode, U in enumerate(U_list):
+        U = np.array(U)
+        P = U @ U.T
+        T = np.tensordot(P, T, axes=([1], [mode]))
+        T = np.moveaxis(T, 0, mode)
+
+    return T.astype(dtype)

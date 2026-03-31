@@ -160,43 +160,40 @@ Reconstructing the Tensor
 --------------------------
 
 :func:`~tensorrsvd.ho_rsvd` returns the factor matrices but not the
-core tensor :math:`\mathcal{G}`. To reconstruct a dense approximation,
-you need to:
-
-1. Materialize the tensor from the callable.
-2. Project onto the factor matrices to obtain the core.
-3. Expand the core back to the original size.
+core tensor :math:`\mathcal{G}`. Use :func:`~tensorrsvd.reconstruct` to
+compute the dense Tucker approximation in a single call:
 
 .. code-block:: python
 
    import numpy as np
+   from tensorrsvd import ho_rsvd, reconstruct
 
-   def materialize(tensor, shape):
-       grids = [np.arange(n) / max(n - 1, 1) for n in shape]
-       coords = np.meshgrid(*grids, indexing="ij")
-       return tensor(*coords)
+   U_list, S_list = ho_rsvd(
+       tensor=my_tensor,
+       tensor_shape=tensor_shape,
+       dtype=np.float64,
+       rank=3,
+       num_oversamples=10,
+       num_idxs=3,
+   )
 
-   T_dense = materialize(my_tensor, tensor_shape)
+   T_hat = reconstruct(my_tensor, tensor_shape, U_list, dtype=np.float64)
 
-   # Core tensor G = T x_0 U0^T x_1 U1^T x_2 U2^T ...
-   G = T_dense
-   for mode, U in enumerate(U_list):
-       G = np.tensordot(U.T, G, axes=([1], [mode]))
-       G = np.moveaxis(G, 0, mode)
+   # Materialize the original for comparison
+   grids = [np.arange(n) / max(n - 1, 1) for n in tensor_shape]
+   coords = np.meshgrid(*grids, indexing="ij")
+   T_true = my_tensor(*coords)
 
-   # T_hat = G x_0 U0 x_1 U1 x_2 U2 ...
-   T_hat = G
-   for mode, U in enumerate(U_list):
-       T_hat = np.tensordot(U, T_hat, axes=([1], [mode]))
-       T_hat = np.moveaxis(T_hat, 0, mode)
-
-   # Relative reconstruction error
-   rel_err = np.linalg.norm(T_dense - T_hat) / np.linalg.norm(T_dense)
+   rel_err = np.linalg.norm(T_true - T_hat) / np.linalg.norm(T_true)
    print(f"Relative error: {rel_err:.2e}")
+
+:func:`~tensorrsvd.reconstruct` applies the Tucker projection
+:math:`\hat{\mathcal{T}} = \mathcal{T} \times_0 P_0 \times_1 P_1 \cdots`,
+where :math:`P_m = U_m U_m^\top`, without explicitly forming the core tensor.
 
 .. note::
 
-   This reconstruction requires materializing :math:`\mathcal{T}` as a dense
+   Reconstruction requires materializing :math:`\mathcal{T}` as a dense
    array, which defeats the memory savings for large tensors. In practice,
    the factor matrices and singular values are often sufficient for downstream
    tasks (dimensionality reduction, feature extraction, compression).

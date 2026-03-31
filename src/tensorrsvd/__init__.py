@@ -2,12 +2,13 @@
 
 Represents tensors as Python callables and computes their Tucker decomposition
 using randomized linear algebra, without ever forming the dense tensor.
-The single public entry point is :func:`tensorrsvd.ho_rsvd`.
+Public entry points: :func:`tensorrsvd.ho_rsvd` and
+:func:`tensorrsvd.reconstruct`.
 """
 
 from importlib.metadata import version
 
-from .api import ho_rsvd
+from .api import ho_rsvd, reconstruct
 
 __version__ = version("tensorrsvd")
-__all__ = ["ho_rsvd", "__version__"]
+__all__ = ["ho_rsvd", "reconstruct", "__version__"]
