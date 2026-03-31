@@ -271,6 +271,39 @@ def test_gaussian_mode_symmetry():
         )
 
 
+def test_gaussian_factor_matrices_are_orthonormal():
+    """Factor matrices returned by ho_rsvd on the Gaussian tensor must be orthonormal."""
+    d = 3
+    r = 0.5
+    sigma = 0.1
+    mu = 0.5
+    n_grid = 32
+    rank = 4
+    shape = (n_grid,) * d
+
+    params = _gaussian_params(r, d, sigma)
+    fn = _make_gaussian_tensor(r, d, params, mu)
+
+    U_list, _ = ho_rsvd(
+        tensor=fn,
+        tensor_shape=shape,
+        dtype=np.float64,
+        rank=rank,
+        num_oversamples=10,
+        num_idxs=d,
+        backend="numpy",
+    )
+
+    for mode, U in enumerate(U_list):
+        UtU = U.T @ U
+        np.testing.assert_allclose(
+            UtU,
+            np.eye(rank),
+            atol=1e-10,
+            err_msg=f"U_list[{mode}] is not orthonormal",
+        )
+
+
 def test_gaussian_near_separable():
     """For r ≈ 0 the Gaussian is nearly separable, so S[1]/S[0] ≈ ρ ≈ 0.
 
