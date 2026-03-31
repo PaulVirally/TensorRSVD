@@ -159,6 +159,7 @@ def test_rank_list_length_mismatch_raises():
     with pytest.raises(ValueError):
         ho_rsvd(fn, (4, 4, 4), np.float64, rank=[2, 2], num_idxs=3, backend="numpy")
 
+
 @pytest.mark.parametrize(
     "k,shape,rank",
     [
