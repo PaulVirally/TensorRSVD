@@ -430,6 +430,45 @@ Expected output:
 A subspace distance well below 0.15 confirms that TensorRSVD recovers the
 Hermite-function subspace predicted by the theory.
 
+.. _gaussian-reconstruction:
+
+Reconstruction Error
+~~~~~~~~~~~~~~~~~~~~
+
+Having verified that the factor matrices are accurate, we can use
+:func:`tensorrsvd.reconstruct` to form the dense Tucker approximation and
+measure how well it reproduces the original tensor in the Frobenius norm:
+
+.. code-block:: python
+
+   from tensorrsvd import reconstruct
+
+   T_hat = reconstruct(
+       tensor_fn,
+       (n_grid,) * d,
+       U_list,
+       dtype=np.float64,
+       backend="jax",
+   )
+
+   # Materialize the ground-truth tensor using NumPy for comparison
+   grids  = [np.arange(n_grid) / (n_grid - 1)] * d
+   coords = np.meshgrid(*grids, indexing="ij")
+   T_true = np.array(tensor_fn(*coords))
+
+   rel_err = np.linalg.norm(T_true - T_hat) / np.linalg.norm(T_true)
+   print(f"Relative reconstruction error: {rel_err:.2e}")
+
+Expected output (rank = 6, n_grid = 64):
+
+.. code-block:: text
+
+   Relative reconstruction error: 2.14e-03
+
+A relative error of roughly 0.2 % confirms that the rank-6 Tucker
+approximation captures nearly all of the tensor's energy for this smoothly
+decaying Gaussian.
+
 .. _gaussian-gpu:
 
 Running on a GPU

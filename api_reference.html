@@ -16,6 +16,7 @@
       <script src="_static/documentation_options.js?v=01f34227"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -50,6 +51,7 @@
 <li class="toctree-l1"><a class="reference internal" href="gaussian_example.html">Gaussian HOSVD Example</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Public API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#tensorrsvd.ho_rsvd"><code class="docutils literal notranslate"><span class="pre">ho_rsvd()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tensorrsvd.reconstruct"><code class="docutils literal notranslate"><span class="pre">reconstruct()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="core.html">Core Internals</a></li>
@@ -82,9 +84,9 @@
              
   <section id="public-api">
 <h1>Public API<a class="headerlink" href="#public-api" title="Link to this heading"></a></h1>
-<p>This page documents the single top-level function that forms the public
-interface of TensorRSVD. Everything else in the library is internal and lives
-under <code class="docutils literal notranslate"><span class="pre">tensorrsvd.core</span></code> or <code class="docutils literal notranslate"><span class="pre">tensorrsvd.backends</span></code>.</p>
+<p>This page documents the top-level functions that form the public interface of
+TensorRSVD. Everything else in the library is internal and lives under
+<code class="docutils literal notranslate"><span class="pre">tensorrsvd.core</span></code> or <code class="docutils literal notranslate"><span class="pre">tensorrsvd.backends</span></code>.</p>
 <p>For a practical walkthrough see the <a class="reference internal" href="user_guide.html"><span class="doc">User Guide</span></a>. For the
 mathematical foundations see <a class="reference internal" href="theory.html"><span class="doc">Theory</span></a>.</p>
 <dl class="py function">
@@ -150,6 +152,86 @@ JAX-traceable if backend == ‘jax’.</p></li>
 <dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">tensorrsvd.core.randomized_range_finder</span></code></dt><dd><p>Low-level range-finder used internally.</p>
 </dd>
 <dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">tensorrsvd.core.rsvd_left</span></code></dt><dd><p>Low-level randomized SVD used internally.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tensorrsvd.reconstruct">
+<span class="sig-prename descclassname"><span class="pre">tensorrsvd.</span></span><span class="sig-name descname"><span class="pre">reconstruct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'numpy'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tensorrsvd/api.html#reconstruct"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tensorrsvd.reconstruct" title="Link to this definition"></a></dt>
+<dd><p>Return the Tucker low-rank approximation of a tensor as a dense array.</p>
+<p>Materializes the tensor on the coordinate grid and projects each mode onto
+the column space of the corresponding factor matrix from
+<a class="reference internal" href="#tensorrsvd.ho_rsvd" title="tensorrsvd.ho_rsvd"><code class="xref py py-func docutils literal notranslate"><span class="pre">ho_rsvd()</span></code></a>. The Tucker projection formula applied
+mode-by-mode is:</p>
+<div class="math notranslate nohighlight">
+\[\hat{\mathcal{T}} = \mathcal{T} \times_0 P_0 \times_1 P_1
+\cdots \times_{k-1} P_{k-1}, \quad P_m = U_m U_m^\top.\]</div>
+<p>This is equivalent to projecting onto the Tucker subspace without
+explicitly forming the core tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tensor</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code>) – The same callable passed to <a class="reference internal" href="#tensorrsvd.ho_rsvd" title="tensorrsvd.ho_rsvd"><code class="xref py py-func docutils literal notranslate"><span class="pre">ho_rsvd()</span></code></a>. Must accept
+<code class="docutils literal notranslate"><span class="pre">k</span></code> array arguments (normalized coordinates in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>) and return
+the tensor values at those coordinates.</p></li>
+<li><p><strong>tensor_shape</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a> of <code class="xref py py-class docutils literal notranslate"><span class="pre">ints</span></code>) – Shape of the tensor <code class="docutils literal notranslate"><span class="pre">(n_0,</span> <span class="pre">...,</span> <span class="pre">n_{k-1})</span></code>, matching the value used
+in <a class="reference internal" href="#tensorrsvd.ho_rsvd" title="tensorrsvd.ho_rsvd"><code class="xref py py-func docutils literal notranslate"><span class="pre">ho_rsvd()</span></code></a>.</p></li>
+<li><p><strong>U_list</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a> of <code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayLike</span></code>) – Factor matrices returned by <a class="reference internal" href="#tensorrsvd.ho_rsvd" title="tensorrsvd.ho_rsvd"><code class="xref py py-func docutils literal notranslate"><span class="pre">ho_rsvd()</span></code></a>. Each
+<code class="docutils literal notranslate"><span class="pre">U_list[m]</span></code> has shape <code class="docutils literal notranslate"><span class="pre">(n_m,</span> <span class="pre">rank_m)</span></code> with orthonormal columns.</p></li>
+<li><p><strong>dtype</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">DTypeLike</span></code>) – Numeric dtype for the output array.</p></li>
+<li><p><strong>backend</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <em>optional</em>) – Backend used to evaluate the tensor callable: <code class="docutils literal notranslate"><span class="pre">'numpy'</span></code> (default),
+<code class="docutils literal notranslate"><span class="pre">'jax'</span></code>, or <code class="docutils literal notranslate"><span class="pre">'cupy'</span></code>. Use the same backend as in
+<a class="reference internal" href="#tensorrsvd.ho_rsvd" title="tensorrsvd.ho_rsvd"><code class="xref py py-func docutils literal notranslate"><span class="pre">ho_rsvd()</span></code></a> so the tensor callable receives the
+correct array type.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dense Tucker approximation with shape <code class="docutils literal notranslate"><span class="pre">tensor_shape</span></code> and dtype
+<code class="docutils literal notranslate"><span class="pre">dtype</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.4)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.ndarray</span></code></a></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Reconstruction requires materializing the full tensor as a dense array.
+This is suitable for validation and small tensors, but defeats the
+memory savings of <a class="reference internal" href="#tensorrsvd.ho_rsvd" title="tensorrsvd.ho_rsvd"><code class="xref py py-func docutils literal notranslate"><span class="pre">ho_rsvd()</span></code></a> for large tensors.</p>
+<p class="rubric">Examples</p>
+<p>Decompose a linear tensor and verify near-exact reconstruction:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">tensorrsvd</span><span class="w"> </span><span class="kn">import</span> <span class="n">ho_rsvd</span><span class="p">,</span> <span class="n">reconstruct</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">my_tensor</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">x0</span> <span class="o">-</span> <span class="n">x1</span> <span class="o">+</span> <span class="n">x2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">U_list</span><span class="p">,</span> <span class="n">S_list</span> <span class="o">=</span> <span class="n">ho_rsvd</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">tensor</span><span class="o">=</span><span class="n">my_tensor</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">tensor_shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">rank</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">num_oversamples</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">num_idxs</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">T_hat</span> <span class="o">=</span> <span class="n">reconstruct</span><span class="p">(</span><span class="n">my_tensor</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">U_list</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">T_hat</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(16, 16, 16)</span>
+</pre></div>
+</div>
+<p>Compute the relative reconstruction error:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">grids</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">shape</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="n">grids</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">&quot;ij&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">T_true</span> <span class="o">=</span> <span class="n">my_tensor</span><span class="p">(</span><span class="o">*</span><span class="n">coords</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rel_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">T_true</span> <span class="o">-</span> <span class="n">T_hat</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">T_true</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rel_err</span> <span class="o">&lt;</span> <span class="mf">1e-6</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#tensorrsvd.ho_rsvd" title="tensorrsvd.ho_rsvd"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tensorrsvd.ho_rsvd</span></code></a></dt><dd><p>Compute the factor matrices and singular values used as input here.</p>
 </dd>
 </dl>
 </div>

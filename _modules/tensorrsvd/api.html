@@ -79,6 +79,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">DTypeLike</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">MatricizedTensorOperator</span><span class="p">,</span> <span class="n">rsvd_left</span>
@@ -204,6 +205,116 @@
         <span class="n">S_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Sm</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">U_list</span><span class="p">,</span> <span class="n">S_list</span></div>
+
+
+
+<div class="viewcode-block" id="reconstruct">
+<a class="viewcode-back" href="../../api_reference.html#tensorrsvd.reconstruct">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">reconstruct</span><span class="p">(</span>
+    <span class="n">tensor</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">tensor_shape</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">U_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">],</span>
+    <span class="n">dtype</span><span class="p">:</span> <span class="n">DTypeLike</span><span class="p">,</span>
+    <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;numpy&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the Tucker low-rank approximation of a tensor as a dense array.</span>
+
+<span class="sd">    Materializes the tensor on the coordinate grid and projects each mode onto</span>
+<span class="sd">    the column space of the corresponding factor matrix from</span>
+<span class="sd">    :func:`~tensorrsvd.ho_rsvd`. The Tucker projection formula applied</span>
+<span class="sd">    mode-by-mode is:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       \\hat{\\mathcal{T}} = \\mathcal{T} \\times_0 P_0 \\times_1 P_1</span>
+<span class="sd">       \\cdots \\times_{k-1} P_{k-1}, \\quad P_m = U_m U_m^\\top.</span>
+
+<span class="sd">    This is equivalent to projecting onto the Tucker subspace without</span>
+<span class="sd">    explicitly forming the core tensor.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tensor : Callable</span>
+<span class="sd">        The same callable passed to :func:`~tensorrsvd.ho_rsvd`. Must accept</span>
+<span class="sd">        ``k`` array arguments (normalized coordinates in ``[0, 1]``) and return</span>
+<span class="sd">        the tensor values at those coordinates.</span>
+<span class="sd">    tensor_shape : tuple of ints</span>
+<span class="sd">        Shape of the tensor ``(n_0, ..., n_{k-1})``, matching the value used</span>
+<span class="sd">        in :func:`~tensorrsvd.ho_rsvd`.</span>
+<span class="sd">    U_list : list of ArrayLike</span>
+<span class="sd">        Factor matrices returned by :func:`~tensorrsvd.ho_rsvd`. Each</span>
+<span class="sd">        ``U_list[m]`` has shape ``(n_m, rank_m)`` with orthonormal columns.</span>
+<span class="sd">    dtype : DTypeLike</span>
+<span class="sd">        Numeric dtype for the output array.</span>
+<span class="sd">    backend : str, optional</span>
+<span class="sd">        Backend used to evaluate the tensor callable: ``&#39;numpy&#39;`` (default),</span>
+<span class="sd">        ``&#39;jax&#39;``, or ``&#39;cupy&#39;``. Use the same backend as in</span>
+<span class="sd">        :func:`~tensorrsvd.ho_rsvd` so the tensor callable receives the</span>
+<span class="sd">        correct array type.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        Dense Tucker approximation with shape ``tensor_shape`` and dtype</span>
+<span class="sd">        ``dtype``.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Reconstruction requires materializing the full tensor as a dense array.</span>
+<span class="sd">    This is suitable for validation and small tensors, but defeats the</span>
+<span class="sd">    memory savings of :func:`~tensorrsvd.ho_rsvd` for large tensors.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Decompose a linear tensor and verify near-exact reconstruction:</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from tensorrsvd import ho_rsvd, reconstruct</span>
+<span class="sd">    &gt;&gt;&gt; def my_tensor(x0, x1, x2):</span>
+<span class="sd">    ...     return x0 - x1 + x2</span>
+<span class="sd">    &gt;&gt;&gt; shape = (16, 16, 16)</span>
+<span class="sd">    &gt;&gt;&gt; U_list, S_list = ho_rsvd(</span>
+<span class="sd">    ...     tensor=my_tensor,</span>
+<span class="sd">    ...     tensor_shape=shape,</span>
+<span class="sd">    ...     dtype=np.float64,</span>
+<span class="sd">    ...     rank=3,</span>
+<span class="sd">    ...     num_oversamples=5,</span>
+<span class="sd">    ...     num_idxs=3,</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; T_hat = reconstruct(my_tensor, shape, U_list, dtype=np.float64)</span>
+<span class="sd">    &gt;&gt;&gt; T_hat.shape</span>
+<span class="sd">    (16, 16, 16)</span>
+
+<span class="sd">    Compute the relative reconstruction error:</span>
+
+<span class="sd">    &gt;&gt;&gt; grids = [np.arange(n) / (n - 1) for n in shape]</span>
+<span class="sd">    &gt;&gt;&gt; coords = np.meshgrid(*grids, indexing=&quot;ij&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; T_true = my_tensor(*coords)</span>
+<span class="sd">    &gt;&gt;&gt; rel_err = np.linalg.norm(T_true - T_hat) / np.linalg.norm(T_true)</span>
+<span class="sd">    &gt;&gt;&gt; rel_err &lt; 1e-6</span>
+<span class="sd">    True</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    tensorrsvd.ho_rsvd :</span>
+<span class="sd">        Compute the factor matrices and singular values used as input here.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.backends</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_arange</span><span class="p">,</span> <span class="n">get_meshgrid</span>
+
+    <span class="n">arange</span> <span class="o">=</span> <span class="n">get_arange</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+    <span class="n">meshgrid</span> <span class="o">=</span> <span class="n">get_meshgrid</span><span class="p">(</span><span class="n">backend</span><span class="p">)</span>
+
+    <span class="n">grids</span> <span class="o">=</span> <span class="p">[</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">tensor_shape</span><span class="p">]</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="n">grids</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">&quot;ij&quot;</span><span class="p">)</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tensor</span><span class="p">(</span><span class="o">*</span><span class="n">coords</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">mode</span><span class="p">,</span> <span class="n">U</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">U_list</span><span class="p">):</span>
+        <span class="n">U</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">U</span><span class="p">)</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">U</span> <span class="o">@</span> <span class="n">U</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="n">mode</span><span class="p">]))</span>
+        <span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">T</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span></div>
 
 </pre></div>
 
