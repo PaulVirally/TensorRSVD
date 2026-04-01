@@ -1,6 +1,6 @@
 [project]
 name = "tensorrsvd"
-version = "0.2.0"
+version = "0.2.1"
 description = "Tensor-free randomized HOSVD (randomized Tucker decomposition)"
 readme = "README.md"
 authors = [
