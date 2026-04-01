@@ -174,12 +174,12 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_mode_vals</span> <span class="o">=</span> <span class="n">_unit_lerp</span><span class="p">(</span><span class="n">arange</span><span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">),</span> <span class="n">num_rows</span><span class="p">)</span>
 
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">))</span>
+
         <span class="c1"># build jitted JAX kernels once to avoid retracing</span>
         <span class="k">if</span> <span class="n">backend</span> <span class="o">==</span> <span class="s2">&quot;jax&quot;</span> <span class="ow">and</span> <span class="n">deps</span><span class="o">.</span><span class="n">jax_enabled</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_jax_matmat_fn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_jax_matmat</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_jax_rmatmat_fn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_jax_rmatmat</span><span class="p">()</span>
-
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">num_cols</span><span class="p">))</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_jax_rmatmat_fn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_jax_rmatmat</span><span class="p">()</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_eval_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i_m</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
