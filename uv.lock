@@ -1208,6 +1208,7 @@ jaxcuda13 = [
 [package.dev-dependencies]
 dev = [
     { name = "ipython" },
+    { name = "jax" },
     { name = "mypy" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -1232,6 +1233,7 @@ provides-extras = ["jax", "jaxcuda12", "jaxcuda13", "cupy", "docs"]
 [package.metadata.requires-dev]
 dev = [
     { name = "ipython", specifier = ">=9.10.0" },
+    { name = "jax", specifier = ">=0.9.0.1" },
     { name = "mypy", specifier = ">=1.15.0" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest-cov", specifier = ">=6.0.0" },

@@ -82,3 +82,30 @@ jobs:
         with:
           files: coverage.xml
           fail_ci_if_error: false
+
+  test-jax:
+    name: Test (JAX / ubuntu-latest)
+    needs: lint
+    runs-on: ubuntu-latest
+    env:
+      JAX_ENABLE_X64: "1"
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          allow-prereleases: true
+
+      - name: Install dev dependencies
+        run: uv sync --group dev
+
+      - name: Run JAX tests
+        run: uv run pytest tests/ -m "jax" --tb=short

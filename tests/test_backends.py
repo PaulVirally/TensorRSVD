@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 from conftest import make_alternating_tensor, skip_no_cupy, skip_no_jax
 
 from tensorrsvd import ho_rsvd
@@ -39,11 +40,13 @@ def test_numpy_output_types():
         assert isinstance(S, np.ndarray)
 
 
+@pytest.mark.jax
 @skip_no_jax
 def test_jax_smoke():
     _smoke("jax")
 
 
+@pytest.mark.jax
 @skip_no_jax
 def test_jax_output_types():
     import jax.numpy as jnp  # noqa: F401
@@ -55,6 +58,7 @@ def test_jax_output_types():
         assert hasattr(S, "shape"), "JAX array should have .shape"
 
 
+@pytest.mark.jax
 @skip_no_jax
 def test_jax_orthonormality():
     import jax.numpy as jnp
