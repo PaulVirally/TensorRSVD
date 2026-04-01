@@ -93,12 +93,12 @@ class MatricizedTensorOperator(pylops.LinearOperator):
 
         self._mode_vals = _unit_lerp(arange(num_rows, dtype=dtype), num_rows)
 
+        super().__init__(dtype=np.dtype(dtype), shape=(num_rows, num_cols))
+
         # build jitted JAX kernels once to avoid retracing
         if backend == "jax" and deps.jax_enabled:
             self._jax_matmat_fn = self._build_jax_matmat()
             self._jax_rmatmat_fn = self._build_jax_rmatmat()
-
-        super().__init__(dtype=np.dtype(dtype), shape=(num_rows, num_cols))
 
     def _eval_row(self, i_m: int):
         """Evaluate all tensor entries with mode index fixed to i_m."""
